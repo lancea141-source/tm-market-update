@@ -42,10 +42,14 @@
     table{width:100%;background:#fff;border-radius:10px;border-collapse:collapse;overflow:hidden;font-size:.82em;margin:12px 0}
     th{background:var(--olive);color:var(--cream);padding:8px;text-align:left}
     td{padding:8px;border-bottom:1px solid var(--cream)}
-    .chart{display:flex;align-items:flex-end;gap:4px;height:120px;background:#fff;border-radius:10px;padding:14px}
+    .chart-outer{display:flex;background:#fff;border-radius:10px;padding:14px 14px 8px 6px;gap:6px}
+    .y-axis{display:flex;flex-direction:column;justify-content:space-between;align-items:flex-end;
+      font-size:.6em;color:var(--olive);padding-bottom:26px;padding-top:12px;min-width:20px}
+    .chart{display:flex;align-items:flex-end;gap:4px;height:150px;flex:1;border-left:1px solid var(--camel);padding-left:6px}
     .bar-wrap{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
     .bar{width:100%;background:var(--terra);border-radius:3px 3px 0 0;min-height:4px}
-    .bar-wrap span{font-size:.6em;margin-top:4px}
+    .bar-val{font-size:.6em;font-weight:bold;color:var(--navy);margin-bottom:2px}
+    .bar-mo{font-size:.55em;margin-top:4px;color:var(--olive);white-space:nowrap}
     .insight{background:var(--camel);color:var(--navy);border-radius:10px;padding:14px;margin:14px 0;font-size:.92em}
     .cta{display:block;background:var(--terra);color:var(--cream);text-align:center;padding:16px;border-radius:10px;text-decoration:none;font-size:1.05em;margin:14px 0}
     footer{text-align:center;font-size:.75em;color:var(--olive);padding:20px 0}
@@ -124,34 +128,74 @@
   <div class="insight">💡 <b>Price per square foot is not one number here.</b>
   Resale — Single Family: $221/sqft · Resale — Town/Condo: $201/sqft · New Construction — Single Family: $225/sqft · New Construction — Town/Condo: $240/sqft —
   pricing off a single blended $/sqft is how homes get mispriced.</div>
-  <h3>Sales by month (all of TM)</h3>
-  <div class="chart">
-    <div class="bar-wrap" title="2025-07: 34 sales"><div class="bar" style="height:65%"></div>
-    <span>07</span></div>
-    <div class="bar-wrap" title="2025-08: 25 sales"><div class="bar" style="height:48%"></div>
-    <span>08</span></div>
-    <div class="bar-wrap" title="2025-09: 38 sales"><div class="bar" style="height:73%"></div>
-    <span>09</span></div>
-    <div class="bar-wrap" title="2025-10: 31 sales"><div class="bar" style="height:60%"></div>
-    <span>10</span></div>
-    <div class="bar-wrap" title="2025-11: 24 sales"><div class="bar" style="height:46%"></div>
-    <span>11</span></div>
-    <div class="bar-wrap" title="2025-12: 38 sales"><div class="bar" style="height:73%"></div>
-    <span>12</span></div>
-    <div class="bar-wrap" title="2026-01: 23 sales"><div class="bar" style="height:44%"></div>
-    <span>01</span></div>
-    <div class="bar-wrap" title="2026-02: 26 sales"><div class="bar" style="height:50%"></div>
-    <span>02</span></div>
-    <div class="bar-wrap" title="2026-03: 52 sales"><div class="bar" style="height:100%"></div>
-    <span>03</span></div>
-    <div class="bar-wrap" title="2026-04: 35 sales"><div class="bar" style="height:67%"></div>
-    <span>04</span></div>
-    <div class="bar-wrap" title="2026-05: 37 sales"><div class="bar" style="height:71%"></div>
-    <span>05</span></div>
-    <div class="bar-wrap" title="2026-06: 32 sales"><div class="bar" style="height:62%"></div>
-    <span>06</span></div>
-    <div class="bar-wrap" title="2026-07: 4 sales"><div class="bar" style="height:8%"></div>
-    <span>07</span></div></div>
+  <h3>Homes sold by month — all of Traverse Mountain (last 12 months)</h3>
+  <div class="chart-outer">
+    <div class="y-axis"><span>52</span><span>26</span><span>0</span></div><div class="chart">
+    <div class="bar-wrap" title="Jul 2025: 34 homes sold">
+      <span class="bar-val">34</span>
+      <div class="bar" style="height:65%"></div>
+      <span class="bar-mo"><b>'25</b> Jul</span>
+    </div>
+    <div class="bar-wrap" title="Aug 2025: 25 homes sold">
+      <span class="bar-val">25</span>
+      <div class="bar" style="height:48%"></div>
+      <span class="bar-mo">Aug</span>
+    </div>
+    <div class="bar-wrap" title="Sep 2025: 38 homes sold">
+      <span class="bar-val">38</span>
+      <div class="bar" style="height:73%"></div>
+      <span class="bar-mo">Sep</span>
+    </div>
+    <div class="bar-wrap" title="Oct 2025: 31 homes sold">
+      <span class="bar-val">31</span>
+      <div class="bar" style="height:60%"></div>
+      <span class="bar-mo">Oct</span>
+    </div>
+    <div class="bar-wrap" title="Nov 2025: 24 homes sold">
+      <span class="bar-val">24</span>
+      <div class="bar" style="height:46%"></div>
+      <span class="bar-mo">Nov</span>
+    </div>
+    <div class="bar-wrap" title="Dec 2025: 38 homes sold">
+      <span class="bar-val">38</span>
+      <div class="bar" style="height:73%"></div>
+      <span class="bar-mo">Dec</span>
+    </div>
+    <div class="bar-wrap" title="Jan 2026: 23 homes sold">
+      <span class="bar-val">23</span>
+      <div class="bar" style="height:44%"></div>
+      <span class="bar-mo"><b>'26</b> Jan</span>
+    </div>
+    <div class="bar-wrap" title="Feb 2026: 26 homes sold">
+      <span class="bar-val">26</span>
+      <div class="bar" style="height:50%"></div>
+      <span class="bar-mo">Feb</span>
+    </div>
+    <div class="bar-wrap" title="Mar 2026: 52 homes sold">
+      <span class="bar-val">52</span>
+      <div class="bar" style="height:100%"></div>
+      <span class="bar-mo">Mar</span>
+    </div>
+    <div class="bar-wrap" title="Apr 2026: 35 homes sold">
+      <span class="bar-val">35</span>
+      <div class="bar" style="height:67%"></div>
+      <span class="bar-mo">Apr</span>
+    </div>
+    <div class="bar-wrap" title="May 2026: 37 homes sold">
+      <span class="bar-val">37</span>
+      <div class="bar" style="height:71%"></div>
+      <span class="bar-mo">May</span>
+    </div>
+    <div class="bar-wrap" title="Jun 2026: 32 homes sold">
+      <span class="bar-val">32</span>
+      <div class="bar" style="height:62%"></div>
+      <span class="bar-mo">Jun</span>
+    </div>
+    <div class="bar-wrap" title="Jul 2026: 4 homes sold">
+      <span class="bar-val">4</span>
+      <div class="bar" style="height:8%"></div>
+      <span class="bar-mo">Jul</span>
+    </div></div></div>
   <h3>Market segments — last 12 months</h3>
   <table><tr><th>Segment</th><th>Sold</th><th>Med. Price</th><th>$/sqft</th><th>DOM</th></tr>
     <tr><td>Resale — Single Family</td><td>89</td><td>$820,000</td>
@@ -162,7 +206,7 @@
     <td>$225</td><td>29</td></tr>
     <tr><td>New Construction — Town/Condo</td><td>143</td><td>$495,000</td>
     <td>$240</td><td>16</td></tr></table>
-  <a class="cta" href="mailto:lancea141@gmail.com?subject=What is my Traverse Mountain home worth?">What's YOUR home worth? Get the real number →</a>
+  <a class="cta" href="https://docs.google.com/forms/d/e/1FAIpQLSc4eYDWaIYjO16JnAW45VtgwqpRtAoDaHlMG-s9Gk2nonBoOg/viewform">What's YOUR home worth? Get the real number →</a>
   <a class="cta" style="background:var(--olive)" href="https://www.youtube.com/@lance141">▶ Watch this week's video update</a>
   <footer>Utah is a non-disclosure state — sold prices are not public record. This data comes directly from MLS records available only to licensed agents.<br><br>
   <b>Lance Anderson — Lance the Realtor</b><br>
