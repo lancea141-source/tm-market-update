@@ -38,8 +38,23 @@
     .mos-zone:nth-child(2){flex:0 0 20%}
     .mos-zone:last-child{border-radius:0 6px 6px 0;flex:0 0 40%}
     .mos-marker{position:absolute;top:100%;transform:translateX(-50%);color:var(--navy);font-size:.9em}
-    .mos-explain{margin-top:18px;font-size:.78em;text-align:left;color:var(--navy)}
-    .mos-reconcile{margin-top:12px;font-size:.78em;text-align:left;background:var(--cream);border-left:4px solid var(--terra);padding:10px;border-radius:0 6px 6px 0}
+    .mos-axis{font-size:.62em;color:var(--olive);font-style:italic;margin-top:14px}
+    .kv-block{margin-top:14px;text-align:left}
+    .kv-head{font-size:.68em;font-weight:bold;letter-spacing:.12em;color:var(--olive);margin:10px 0 4px}
+    .kv-row{display:flex;justify-content:space-between;gap:10px;font-size:.78em;padding:4px 0;border-bottom:1px solid rgba(107,122,58,.15)}
+    .kv-row span:last-child,.kv-row b:last-child{text-align:right}
+    .kv-foot{font-size:.68em;font-style:italic;color:var(--olive);margin-top:6px}
+    .mos-reconcile{margin-top:14px;font-size:.78em;text-align:left;background:var(--cream);border-left:4px solid var(--terra);padding:10px;border-radius:0 6px 6px 0}
+    .vt{width:100%;border-collapse:collapse;font-size:.95em;margin:4px 0;background:transparent}
+    .vt th{background:transparent;color:var(--olive);font-size:.8em;text-align:left;padding:3px 6px 3px 0;border-bottom:1px solid var(--camel)}
+    .vt td{padding:5px 6px 5px 0;border-bottom:1px solid rgba(194,161,120,.4);vertical-align:top}
+    .vt-bottom{margin-top:8px;font-size:.95em}
+    .pm-card{background:#fff;border-radius:12px;padding:18px;margin:14px 0;border-top:4px solid var(--navy)}
+    .pm-sub{font-size:.72em;color:var(--olive);font-style:italic;margin:2px 0 8px}
+    .ignore-box{margin-top:12px;border:2px solid var(--terra);border-radius:8px;padding:10px;background:rgba(244,237,228,.5)}
+    .ignore-title{font-size:.7em;font-weight:bold;letter-spacing:.12em;color:var(--terra);margin-bottom:4px}
+    .ignore-why{font-size:.72em;margin-top:4px}
+    .ppsf-close{margin-top:10px;font-size:.78em;text-align:center;font-weight:bold}
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0}
     .stat{background:#fff;border-radius:10px;padding:14px;text-align:center;border-top:4px solid var(--terra)}
     .stat b{display:block;font-size:1.3em}
@@ -132,17 +147,30 @@
     <div class="mos-num">2.3<span class="mos-unit"> months</span></div>
     <div class="mos-rating">Seller's Market</div>
     <div class="mos-scale">
-      <div class="mos-zone" style="background:var(--terra)">Seller's<br>&lt; 4 mo</div>
-      <div class="mos-zone" style="background:var(--camel);color:var(--navy)">Balanced<br>4–6 mo</div>
-      <div class="mos-zone" style="background:var(--olive)">Buyer's<br>&gt; 6 mo</div>
-      <div class="mos-marker" style="left:23.157894736842106%">▲</div>
+      <div class="mos-zone" style="background:var(--olive);flex:0 0 40%">Buyer's<br>&gt; 6 mo</div>
+      <div class="mos-zone" style="background:var(--camel);color:var(--navy);flex:0 0 20%">Balanced<br>4–6 mo</div>
+      <div class="mos-zone" style="background:var(--terra);flex:0 0 40%">Seller's<br>&lt; 4 mo</div>
+      <div class="mos-marker" style="left:76.84210526315789%">▲</div>
     </div>
-    <div class="mos-explain">How long it would take every active listing to sell at the current sales pace if
-    nothing new hit the market: <b>77 active listings ÷ 33 sales per month
-    = 2.3 months</b>. Under 4 months, sellers hold the leverage and prices trend up;
-    4–6 is equilibrium; over 6, buyers gain negotiating power. It's the number appraisers and agents
-    across the industry use to rate a market.</div>
-    <div class="mos-reconcile">🔍 <b>Reading the two numbers together:</b> Why the two ratings read differently: Months of Supply looks only at inventory — at 2.3 months, supply alone says seller's market. The TM Index also weighs sales pace, price momentum, and negotiation signals, which are running cooler. Translation: sellers hold the structural leverage, but buyers have more breathing room than the supply number alone suggests.</div>
+    <div class="mos-axis">← more supply&nbsp;&nbsp;·&nbsp;&nbsp;less supply →</div>
+    <div class="kv-block">
+      <div class="kv-head">THE MATH</div>
+      <div class="kv-row"><span>77 active listings ÷ 33 sales/month</span><b>= 2.3 months</b></div>
+      <div class="kv-head">WHAT THE NUMBER MEANS</div>
+      <div class="kv-row"><span><b>Under 4 mo</b> · Seller's market</span><span>Sellers hold leverage, prices trend up</span></div>
+      <div class="kv-row"><span><b>4–6 mo</b> · Balanced</span><span>Supply matches demand, prices stabilize</span></div>
+      <div class="kv-row"><span><b>Over 6 mo</b> · Buyer's market</span><span>Homes sit, buyers negotiate harder</span></div>
+      <div class="kv-foot">The industry-standard rating used by appraisers and agents.</div>
+    </div>
+    <div class="mos-reconcile">
+      <div class="kv-head">🔍 READING THE TWO NUMBERS TOGETHER</div>
+      <table class="vt">
+        <tr><th></th><th>Verdict</th><th>Why</th></tr>
+        <tr><td>Months of Supply</td><td><b>Seller's Market</b></td><td>Counts only inventory — 2.3 months is scarce</td></tr>
+        <tr><td>TM Index (57)</td><td><b>Leaning sellers</b></td><td>Adds sales pace, price momentum &amp; negotiation signals</td></tr>
+      </table>
+      <div class="vt-bottom"><b>BOTTOM LINE:</b> Sellers hold the structural leverage — but buyers have more breathing room than the supply number alone suggests.</div>
+    </div>
   </div>
   <div class="grid">
     <div class="stat"><b>27</b><span>Homes sold (last 30 days)</span></div>
@@ -153,39 +181,48 @@
   </div>
   <div class="insight">
     <div class="insight-title">💡 Price per square foot is not one number here</div>
-    <div class="insight-sub">Each segment's median $/sqft — and how far it sits from the "TM average" you'll see online.</div>
+    <div class="insight-sub">Each segment trades at its own rate:</div>
     
-        <div class="ppsf-row ppsf-head">
-          <span class="ppsf-name"></span><span class="ppsf-track" style="background:none"></span>
-          <span class="ppsf-val">$/sqft</span><span class="ppsf-diff">vs online avg</span>
-        </div>
         <div class="ppsf-row">
           <span class="ppsf-name">Resale — Single Family</span>
           <span class="ppsf-track"><span class="ppsf-fill" style="width:92%"></span></span>
           <span class="ppsf-val">$221</span>
-          <span class="ppsf-diff" style="color:#a04f1d">−$9</span>
         </div>
         <div class="ppsf-row">
           <span class="ppsf-name">Resale — Town/Condo</span>
           <span class="ppsf-track"><span class="ppsf-fill" style="width:84%"></span></span>
           <span class="ppsf-val">$201</span>
-          <span class="ppsf-diff" style="color:#a04f1d">−$29</span>
         </div>
         <div class="ppsf-row">
           <span class="ppsf-name">New Construction — Single Family</span>
           <span class="ppsf-track"><span class="ppsf-fill" style="width:94%"></span></span>
           <span class="ppsf-val">$225</span>
-          <span class="ppsf-diff" style="color:#a04f1d">−$5</span>
         </div>
         <div class="ppsf-row">
           <span class="ppsf-name">New Construction — Town/Condo</span>
           <span class="ppsf-track"><span class="ppsf-fill" style="width:100%"></span></span>
           <span class="ppsf-val">$240</span>
-          <span class="ppsf-diff" style="color:#5a682f">+$10</span>
         </div>
-        <div class="ppsf-warn">⚠️ <b>The "average" online: $230/sqft.</b> Real math, useless for pricing —
-        it blends townhomes with luxury homes, new builds with resale. No segment actually sells at it.<br>
-        <b>Use your segment's number above as the starting point — and a real CMA for the answer.</b></div>
+        <div class="ignore-box">
+          <div class="ignore-title">🚫 THE NUMBER TO IGNORE</div>
+          <div class="kv-row"><span>The online "TM average"</span><b><s>$230/sqft</s></b></div>
+          <div class="ignore-why">Blends townhomes with luxury, new with resale — nothing actually sells at it.</div>
+        </div>
+        <div class="ppsf-close">Your segment's rate = the starting point&nbsp;&nbsp;·&nbsp;&nbsp;a CMA = the answer</div>
+  </div>
+  
+  <div class="pm-card">
+    <div class="mos-kicker">WHAT A SQUARE FOOT IS ACTUALLY WORTH IN TM</div>
+    <div class="pm-sub">(resale single-family)</div>
+    <div class="kv-row"><span>Above-grade living space</span><span><b>$149/sqft</b> · 100%</span></div>
+    <div class="kv-row"><span>Finished basement</span><span><b>$114/sqft</b> · 76%</span></div>
+    <div class="kv-row"><span>Unfinished basement</span><span><b>$84/sqft</b> · 56%</span></div>
+    <div class="kv-row"><span>Walkout/daylight basement</span><span><b>+$43K</b> · flat premium</span></div>
+    <div class="kv-head" style="margin-top:12px">📐 TM PRICING MODEL</div>
+    <div class="kv-row"><span>Built from</span><span>224 resale sales · 24 months</span></div>
+    <div class="kv-row"><span>Accuracy</span><span>🟡 beta · typical error ±8%</span></div>
+    <div class="kv-row"><span>Key finding</span><span>Basements worth 76% here — not the old "half" rule</span></div>
+    <div class="kv-row"><span>Your exact number</span><span><b>↓ get the real number below</b></span></div>
   </div>
   <h3>Homes sold by month — all of Traverse Mountain (last 12 months)</h3>
   <div class="chart-outer">
