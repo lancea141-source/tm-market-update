@@ -19,6 +19,7 @@
     .idx-zone:last-child{border-radius:0 6px 6px 0}
     .idx-marker{position:absolute;top:100%;transform:translateX(-50%);color:var(--camel);font-size:.85em}
     .comp-wrap{margin-top:18px;text-align:left}
+    .comp-key{font-size:.62em;letter-spacing:.08em;color:var(--camel);font-weight:bold;margin-bottom:6px}
     .comp{display:flex;align-items:center;gap:10px;margin-top:8px}
     .comp-name{flex:0 0 34%;font-size:.8em}
     .comp-track{flex:1;position:relative;height:10px;background:rgba(244,237,228,.18);border-radius:5px;overflow:visible}
@@ -96,47 +97,48 @@
   </header>
   <div class="index-card">
     <div>TM MARKET INDEX</div>
-    <div class="index-num">57</div>
-    <div>Leaning sellers</div>
+    <div class="index-num">66</div>
+    <div>Strong seller's market</div>
     <div class="idx-scale">
       <div class="idx-zone" style="flex:0 0 40%;background:var(--olive)">Buyer's<br>&lt; 40</div>
       <div class="idx-zone" style="flex:0 0 10%;background:#8a9a55">Lean buy<br>40–50</div>
       <div class="idx-zone" style="flex:0 0 10%;background:#d08a52">Lean sell<br>50–60</div>
       <div class="idx-zone" style="flex:0 0 40%;background:var(--terra)">Seller's<br>&gt; 60</div>
-      <div class="idx-marker" style="left:57%">▲</div>
+      <div class="idx-marker" style="left:66%">▲</div>
     </div>
     <div class="comp-wrap">
+      <div class="comp-key">HOW TO READ: each signal scored 0–100 · 50 = neutral · higher favors sellers</div>
       
       <div class="comp">
         <span class="comp-name">Sales velocity</span>
         <span class="comp-track"><span class="comp-fill" style="width:48%"></span><span class="comp-mid"></span></span>
         <span class="comp-score">48</span>
       </div>
-      <div class="comp-raw">98 sales vs 102 prior qtr</div>
+      <div class="comp-raw">98 sales vs 102 prior qtr · <i>more sales than last quarter = hotter</i></div>
       <div class="comp">
         <span class="comp-name">Price momentum</span>
-        <span class="comp-track"><span class="comp-fill" style="width:10%"></span><span class="comp-mid"></span></span>
-        <span class="comp-score">10</span>
+        <span class="comp-track"><span class="comp-fill" style="width:54%"></span><span class="comp-mid"></span></span>
+        <span class="comp-score">54</span>
       </div>
-      <div class="comp-raw">$555K vs $661K prior qtr</div>
+      <div class="comp-raw">$813K vs $800K prior qtr (resale medians) · <i>price trend vs last quarter, resale-based to avoid mix distortion</i></div>
       <div class="comp">
         <span class="comp-name">Days on market</span>
         <span class="comp-track"><span class="comp-fill" style="width:83%"></span><span class="comp-mid"></span></span>
         <span class="comp-score">83</span>
       </div>
-      <div class="comp-raw">20 days</div>
+      <div class="comp-raw">20 days · <i>faster = higher (scaled to 120 days)</i></div>
       <div class="comp">
         <span class="comp-name">Sale-to-list ratio</span>
         <span class="comp-track"><span class="comp-fill" style="width:67%"></span><span class="comp-mid"></span></span>
         <span class="comp-score">67</span>
       </div>
-      <div class="comp-raw">100.0%</div>
+      <div class="comp-raw">100.0% · <i>scaled from 90% to 105%</i></div>
       <div class="comp">
         <span class="comp-name">Months of Supply</span>
         <span class="comp-track"><span class="comp-fill" style="width:77%"></span><span class="comp-mid"></span></span>
         <span class="comp-score">77</span>
       </div>
-      <div class="comp-raw">2.3 mo — Seller's Market</div>
+      <div class="comp-raw">2.3 mo — Seller's Market · <i>industry scale: <4 seller · 4–6 balanced · >6 buyer</i></div>
     </div>
     <div class="index-note">The TM Market Index is my proprietary composite: five components, equally weighted,
     from the last 90 days of MLS data. 50 = a perfectly balanced market — above 50 favors sellers, below favors buyers.</div>
@@ -167,9 +169,9 @@
       <table class="vt">
         <tr><th></th><th>Verdict</th><th>Why</th></tr>
         <tr><td>Months of Supply</td><td><b>Seller's Market</b></td><td>Counts only inventory — 2.3 months is scarce</td></tr>
-        <tr><td>TM Index (57)</td><td><b>Leaning sellers</b></td><td>Adds sales pace, price momentum &amp; negotiation signals</td></tr>
+        <tr><td>TM Index (66)</td><td><b>Strong seller's market</b></td><td>Adds sales pace, price momentum &amp; negotiation signals</td></tr>
       </table>
-      <div class="vt-bottom"><b>BOTTOM LINE:</b> Sellers hold the structural leverage — but buyers have more breathing room than the supply number alone suggests.</div>
+      <div class="vt-bottom"><b>BOTTOM LINE:</b> Both agree — a true seller's market.</div>
     </div>
   </div>
   <div class="grid">
