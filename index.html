@@ -56,7 +56,10 @@
     .bar-val{font-size:.6em;font-weight:bold;color:var(--navy);margin-bottom:2px}
     .bar-mo{font-size:.55em;margin-top:4px;color:var(--olive);white-space:nowrap}
     .insight{background:var(--camel);color:var(--navy);border-radius:10px;padding:16px;margin:14px 0;font-size:.92em}
-    .insight-title{font-weight:bold;margin-bottom:10px}
+    .insight-title{font-weight:bold}
+    .insight-sub{font-size:.75em;font-style:italic;margin:4px 0 10px;opacity:.85}
+    .ppsf-head{font-size:.62em;font-weight:bold;opacity:.75;margin-bottom:-2px}
+    .ppsf-warn{margin-top:12px;padding:10px;font-size:.78em;line-height:1.55;background:rgba(244,237,228,.6);border-left:4px solid var(--terra);border-radius:0 6px 6px 0}
     .ppsf-row{display:flex;align-items:center;gap:8px;margin-top:6px}
     .ppsf-name{flex:0 0 44%;font-size:.78em;line-height:1.2}
     .ppsf-track{flex:1;height:12px;background:rgba(47,62,70,.15);border-radius:6px;overflow:hidden}
@@ -150,7 +153,12 @@
   </div>
   <div class="insight">
     <div class="insight-title">💡 Price per square foot is not one number here</div>
+    <div class="insight-sub">Each segment's median $/sqft — and how far it sits from the "TM average" you'll see online.</div>
     
+        <div class="ppsf-row ppsf-head">
+          <span class="ppsf-name"></span><span class="ppsf-track" style="background:none"></span>
+          <span class="ppsf-val">$/sqft</span><span class="ppsf-diff">vs online avg</span>
+        </div>
         <div class="ppsf-row">
           <span class="ppsf-name">Resale — Single Family</span>
           <span class="ppsf-track"><span class="ppsf-fill" style="width:92%"></span></span>
@@ -175,16 +183,9 @@
           <span class="ppsf-val">$240</span>
           <span class="ppsf-diff" style="color:#5a682f">+$10</span>
         </div>
-        <div class="ppsf-row ppsf-ref">
-          <span class="ppsf-name"><b>Blended TM median</b></span>
-          <span class="ppsf-track"><span class="ppsf-fill ppsf-fill-ref" style="width:96%"></span></span>
-          <span class="ppsf-val">$230</span>
-          <span class="ppsf-diff" style="font-size:.6em">← the portals' number</span>
-        </div>
-        <div class="ppsf-takeaway">
-          That's the one number Zillow multiplies your square footage by.<br>
-          <b>Nothing actually sells at it — that's how homes get mispriced.</b>
-        </div>
+        <div class="ppsf-warn">⚠️ <b>The "average" online: $230/sqft.</b> Real math, useless for pricing —
+        it blends townhomes with luxury homes, new builds with resale. No segment actually sells at it.<br>
+        <b>Use your segment's number above as the starting point — and a real CMA for the answer.</b></div>
   </div>
   <h3>Homes sold by month — all of Traverse Mountain (last 12 months)</h3>
   <div class="chart-outer">
@@ -264,7 +265,7 @@
     <td>$225</td><td>29</td></tr>
     <tr><td>New Construction — Town/Condo</td><td>143</td><td>$495,000</td>
     <td>$240</td><td>16</td></tr></table>
-  <a class="cta" href="https://docs.google.com/forms/d/e/1FAIpQLSc4eYDWaIYjO16JnAW45VtgwqpRtAoDaHlMG-s9Gk2nonBoOg/viewform">What's YOUR home worth? Get the real number →</a>
+  <a class="cta" href="mailto:lancea141@gmail.com?subject=What is my Traverse Mountain home worth?">What's YOUR home worth? Get the real number →</a>
   <a class="cta" style="background:var(--olive)" href="https://www.youtube.com/@lance141">▶ Watch this week's video update</a>
   <footer>Utah is a non-disclosure state — sold prices are not public record. This data comes directly from MLS records available only to licensed agents.<br><br>
   <b>Lance Anderson — Lance the Realtor</b><br>
