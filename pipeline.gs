@@ -1,8 +1,44 @@
 /**
- * TM MARKET UPDATE PIPELINE — Lance the Realtor
- * VERSION 22
+ * MARKET UPDATE PIPELINE — Lance the Realtor (multi-location)
+ * VERSION 23
  * ------------------------------------------------
  * CHANGELOG
+ *  v27 VERSION VISIBLE IN THE SHEET. ▶ Run tab title shows the running
+ *      version and refreshes on every sheet open (so it always matches
+ *      the pasted code). Dashboard subtitle and ✅ Check Setup show it too.
+ *  v26 TOWNHOME MODEL. Second hedonic fit on resale town/condo sales
+ *      (above-grade sqft, basement, garage, age, baths, beds — no acres/
+ *      walkout). Appears as its own section on the 📐 CMA Adjustments tab
+ *      and the cma-rates/ page ONLY when that market has 60+ TH sales —
+ *      TM stays SFH-only automatically, Lehi shows both. Scope warning
+ *      adapts. Shared regress_() solver added.
+ *  v25 CMA ADJUSTMENT ENGINE — the TM-CMA-Adjustment-Rates sheet, alive.
+ *      · Full 12-predictor hedonic model (main vs upper $/sqft, basement
+ *        fin/unf, walkout, garage bays, acres, age, baths, bedrooms) refits
+ *        on every ▶ Build Stats from that location's own sales.
+ *      · 📐 CMA Adjustments tab: field-by-field rates with confidence
+ *        flags, anchor formula, model quality, scope limits.
+ *      · Public page published alongside the report at cma-rates/
+ *        (e.g. …github.io/<repo>/lehi/cma-rates/) — branded agent-facing
+ *        adjustment table, linked from the report's pricing card.
+ *  v24 DATA MANAGEMENT + ONE-TAP SETUP.
+ *      · 📥 Paste tab (inbox): paste each month's export there, headers
+ *        included. ▶ Build Stats absorbs it into Data automatically —
+ *        every row stamped with import date, then Data is compacted:
+ *        duplicate MLS# resolved (newest import wins, SOLD beats ACTIVE),
+ *        actives treated as a snapshot (only the latest import counts),
+ *        solds older than 25 months dropped. Import Log tab records history.
+ *      · 🔑 Set GitHub Token menu item — prompt box saves GITHUB_TOKEN,
+ *        no more Project Settings digging on new location copies.
+ *      · ✅ Check Setup (menu + Run tab) — verifies token, lead form,
+ *        triggers, data freshness, and where this copy publishes.
+ *  v23 MULTI-LOCATION. All location-specific text derives from the
+ *      LOCATION SETTINGS block at the top of CONFIG (farmName, farmShort,
+ *      areaLine, numbersLine, agentTagline) + CONFIG.github.path.
+ *      New area = copy the Sheet, edit those lines, add GITHUB_TOKEN
+ *      script property, Setup Workbook, paste that area's export,
+ *      Build Stats, Publish. One repo, subfolder per location
+ *      ('lehi/index.html' publishes to ...github.io/<repo>/lehi/).
  *  v22 Index component key on web page ("each signal 0–100 · 50 neutral ·
  *      higher favors sellers") + each component's how-it-works line shown
  *      under its bar. Price momentum now computed on RESALE-ONLY medians so
@@ -102,7 +138,7 @@
  * Monthly: re-import fresh exports → buildStats() + generateScript(). Done.
  */
 
-const VERSION = 'v22';
+const VERSION = 'v27';
 
 // Graduated index labels — no hard "seller's/buyer's" flip at one point
 function idxLabel_(i) {
@@ -131,7 +167,7 @@ function reconcile_(s) {
     return 'Both measures agree: supply is tight at ' + mos + ' months AND the broader signals are hot. A true seller\'s market.';
   if (supplyTight && s.index >= 50)
     return 'Why the two ratings read differently: Months of Supply looks only at inventory — at ' + mos +
-      ' months, supply alone says seller\'s market. The TM Index also weighs sales pace, price momentum, and negotiation ' +
+      ' months, supply alone says seller\'s market. The ' + CONFIG.farmShort + ' Index also weighs sales pace, price momentum, and negotiation ' +
       'signals, which are running cooler. Translation: sellers hold the structural leverage, but buyers have more ' +
       'breathing room than the supply number alone suggests.';
   if (supplyTight)
@@ -147,15 +183,22 @@ function reconcile_(s) {
 // ============================================================
 function onOpen() {
   SpreadsheetApp.getUi()
-    .createMenu('📊 TM Market')
+    .createMenu('📊 ' + CONFIG.farmShort + ' Market')
     .addItem('▶ Build Stats & Dashboard', 'buildStats')
+    .addItem('✅ Check Setup', 'checkSetupAlert')
     .addItem('🎬 Generate Video Script', 'generateScript')
     .addItem('🌐 Publish to GitHub', 'publishToGitHubWithAlert')
     .addSeparator()
+    .addItem('🔑 Set GitHub Token', 'setGithubToken')
     .addItem('⚙️ Setup Workbook (first time only)', 'setupWorkbook')
     .addItem('🔘 Install Run-Tab Trigger (first time only)', 'installRunTrigger')
     .addItem('📝 Setup Lead Form (first time only)', 'setupLeadForm')
     .addToUi();
+  // keep the Run tab's version label in sync with the pasted code
+  try {
+    const sh = SpreadsheetApp.getActive().getSheetByName('▶ Run');
+    if (sh) sh.getRange('A1').setValue('📊 ' + CONFIG.farmShort + ' MARKET — CONTROL PANEL · ' + VERSION);
+  } catch (e) {}
 }
 
 // ---------- LEAD CAPTURE (Google Form → this Sheet + instant email) ----------
@@ -168,7 +211,7 @@ function leadFormUrl_() {
 // report's CTA button switches from mailto to the form automatically.
 function setupLeadForm() {
   const ss = SpreadsheetApp.getActive();
-  const form = FormApp.create("What's my Traverse Mountain home worth?");
+  const form = FormApp.create("What's my " + CONFIG.farmName + " home worth?");
   form.setDescription('Get your home\'s real number — based on MLS sold data the public sites can\'t see. ' +
     'No pressure, just data.\n' + CONFIG.agentName + ' — ' + CONFIG.agentBrand + ' · ' + CONFIG.brokerage +
     ' · ' + CONFIG.agentPhone + ' · Equal Housing Opportunity');
@@ -200,20 +243,21 @@ function onLeadSubmit(e) {
   const v = k => (vals[k] && vals[k][0]) ? vals[k][0] : '—';
   MailApp.sendEmail({
     to: CONFIG.agentEmail,
-    subject: '🔥 NEW TM LEAD: ' + v('Property address') + ' — ' + v('Thinking of selling…'),
+    subject: '🔥 NEW ' + CONFIG.farmShort + ' LEAD: ' + v('Property address') + ' — ' + v('Thinking of selling…'),
     body: 'Name: ' + v('Your name') +
       '\nPhone: ' + v('Phone (call/text)') +
       '\nEmail: ' + v('Email') +
       '\nAddress: ' + v('Property address') +
       '\nTimeframe: ' + v('Thinking of selling…') +
       '\nNotes: ' + v('Anything I should know? (upgrades, finished basement, etc.)') +
-      '\n\nSpeed-to-lead wins — call them now.\n— TM Pipeline ' + VERSION
+      '\n\nSpeed-to-lead wins — call them now.\n— ' + CONFIG.farmShort + ' Pipeline ' + VERSION
   });
 }
 
 // ---------- ▶ RUN TAB — tap a checkbox to run (works on MOBILE) ----------
 const RUN_ACTIONS = [
-  ['▶ Build Stats & Dashboard', 'buildStats', 'Refresh Stats + Dashboard from Solds/Actives'],
+  ['▶ Build Stats & Dashboard', 'buildStats', 'Absorb 📥 Paste + refresh Stats, Dashboard, Pricing Model'],
+  ['✅ Check Setup', 'checkSetup', 'Verify token, lead form, triggers, and data'],
   ['🎬 Generate Video Script', 'generateScript', 'Draft this month\'s video script in the Script tab'],
   ['🌐 Publish to GitHub', 'publishToGitHub', 'Push the live report to your GitHub Pages URL']
 ];
@@ -223,7 +267,7 @@ function buildRunTab_() {
   const b = CONFIG.brand;
   const sh = ss.getSheetByName('▶ Run') || ss.insertSheet('▶ Run', 0);
   sh.clear();
-  sh.getRange('A1:D1').merge().setValue('📊 TM MARKET — CONTROL PANEL')
+  sh.getRange('A1:D1').merge().setValue('📊 ' + CONFIG.farmShort + ' MARKET — CONTROL PANEL · ' + VERSION)
     .setBackground(b.navy).setFontColor(b.cream).setFontSize(14).setFontWeight('bold')
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   sh.setRowHeight(1, 40);
@@ -264,7 +308,7 @@ function onRunEdit(e) {
   const idx = e.range.getRow() - 3;
   if (idx < 0 || idx >= RUN_ACTIONS.length) return;
   e.range.setValue(false);
-  const fns = { buildStats, generateScript, publishToGitHub };
+  const fns = { buildStats, generateScript, publishToGitHub, checkSetup };
   const status = sh.getRange(e.range.getRow(), 4);
   status.setValue('⏳ Running…');
   SpreadsheetApp.flush();
@@ -283,10 +327,16 @@ function publishToGitHubWithAlert() {
 }
 
 const CONFIG = {
-  farmName: 'Traverse Mountain',
+  // == LOCATION SETTINGS - the only lines to edit per location ==
+  farmName: 'Lehi',                     // full name: 'Lehi', 'Eagle Mountain', 'Tooele'
+  farmShort: 'Lehi',                    // short label: 'Lehi', 'EM', 'Tooele' - drives '<X> Market Index' etc.
+  areaLine: 'all of Lehi',              // chart caption: 'all of Lehi'
+  numbersLine: "Here's Lehi in numbers.",         // video intro
+  agentTagline: 'Data-driven real estate in Lehi',
+  // ALSO per location: github.path below ('index.html' TM / 'lehi/index.html' Lehi / ...)
+  // =============================================================
   agentName: 'Lance Anderson',
   agentBrand: 'Lance the Realtor',
-  agentTagline: 'Data-driven real estate in Traverse Mountain',
   agentEmail: 'lancea141@gmail.com',
   agentPhone: '(801) 860-5225',
   brokerage: 'Jason Mitchell Real Estate Utah LLC',
@@ -303,7 +353,7 @@ const CONFIG = {
     owner: 'lancea141-source',
     repo: 'tm-market-update',
     branch: 'main',
-    path: 'index.html'
+    path: 'lehi/index.html'
   }
 };
 
@@ -345,11 +395,15 @@ function scanAll_() {
       const g = label => { const i = col(label); return i > -1 ? num_(row[i]) : null; };
       const mlsIdx = col('MLS#');
       const mls = mlsIdx > -1 ? String(row[mlsIdx]).trim() : '';
+      const impIdx = col('Imported');
+      const impV = impIdx > -1 ? row[impIdx] : null;
+      const impD = impV instanceof Date ? impV : (impV ? new Date(impV) : null);
+      const imp = impD && !isNaN(impD) ? impD : null;
 
       if (mode === 'oldActives') {
         const lp = num_(row[col('List Price')]);
         if (!lp) return;
-        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls });
+        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp });
         return;
       }
       // combined block: route each row by its Status
@@ -358,7 +412,7 @@ function scanAll_() {
       if (status === 'ACTIVE') {
         const lp = num_(row[col('List Price')]);
         if (!lp) return;
-        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls });
+        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp });
         return;
       }
       if (status !== 'SOLD') return; // skip UNDER CONTRACT/BACKUP etc.
@@ -378,24 +432,37 @@ function scanAll_() {
         yb: g('Year Built'), bf: g('Basement Finished'),
         isTH: /town|condo/i.test(String(row[col('Style')] || '')),
         ag: ag || null, bs,
+        l1: g('Main Floor Square Feet'),
+        up: (g('Second Floor Square Feet') || 0) + (g('Third Floor Square Feet') || 0) +
+            (g('Fourth Floor Square Feet') || 0),
+        gar: g('Garage Capacity'), bd: g('Total Bedrooms'),
+        fb: g('Total Full Bathrooms'), tq: g('Total Three-quarter Bathrooms'),
+        hb: g('Total Half Bathrooms'),
         acres: g('Acres') || 0,
         walk: bTypeIdx > -1 ? /walkout|daylight/i.test(String(row[bTypeIdx] || '')) : false,
-        mls
+        mls, imp
       });
     });
   });
-  // dedupe by MLS# — overlapping exports (this year + last year) pasted together are fine
-  const dedupe = arr => {
-    const seen = new Set();
-    return arr.filter(r => {
-      if (!r.mls) return true;
-      if (seen.has(r.mls)) return false;
-      seen.add(r.mls);
-      return true;
+  // v24 dedupe & staleness rules:
+  //  · duplicate MLS#: the row from the NEWEST import wins (later paste beats older)
+  //  · actives are a SNAPSHOT: only the latest import's actives count
+  //  · any MLS# that appears as SOLD is never counted as active
+  const tms = d => d ? new Date(d).getTime() : 0;
+  const pick = arr => {
+    const m = {};
+    arr.forEach((r, i) => {
+      const k = r.mls || ('~row' + i);
+      if (!m[k] || tms(r.imp) >= tms(m[k].imp)) m[k] = r;
     });
+    return Object.values(m);
   };
-  const s = dedupe(solds), a = dedupe(actives);
-  if (!s.length) throw new Error('No sold rows found. Paste your combined export (header starts with "Sold Date") into the Data tab.');
+  const s = pick(solds);
+  const soldSet = new Set(s.map(r => r.mls).filter(Boolean));
+  let a = pick(actives).filter(r => !soldSet.has(r.mls));
+  const maxImp = Math.max(0, ...a.map(r => tms(r.imp)));
+  a = a.filter(r => tms(r.imp) === maxImp);
+  if (!s.length) throw new Error('No sold rows found. Paste your export (header starts with "Sold Date") into the ' + PASTE_TAB + ' tab, then run ▶ Build Stats.');
   return { solds: s, actives: a };
 }
 function getSolds_() { return scanAll_().solds; }
@@ -496,7 +563,9 @@ function computeStats_() {
     prev3Sales: prev3.length, prev3MedPrice: median_(prev3.map(r => r.sp)),
     prev3Ppsf: ppsf(prev3), prev3Dom: median_(prev3.map(r => r.dom)),
     moi, moiRating, index, segments, basement, trend,
-    pm: pricingModel_(solds)
+    pm: pricingModel_(solds),
+    cm: cmaModel_(solds),
+    cmTH: cmaTHModel_(solds)
   };
 }
 
@@ -585,14 +654,15 @@ function buildPricingTab_(m) {
 
 // ---------- Stats tab (video script source) ----------
 function buildStats() {
+  const abs = absorbPaste_();   // 📥 Paste tab → Data (stamped, deduped, trimmed)
   const s = computeStats_();
   const ss = SpreadsheetApp.getActive();
   const sh = ss.getSheetByName('Stats') || ss.insertSheet('Stats');
   sh.clear();
   const $ = n => n == null ? '—' : '$' + Math.round(n).toLocaleString();
   const rows = [
-    ['TM MARKET STATS', 'Updated ' + s.updated],
-    ['TM Market Index (0-100)', s.index + '  (50 = balanced; higher = seller\'s market)'],
+    [CONFIG.farmShort + ' MARKET STATS', 'Updated ' + s.updated],
+    [CONFIG.farmShort + ' Market Index (0-100)', s.index + '  (50 = balanced; higher = seller\'s market)'],
     ...s.components.map(c => ['   · ' + c.name, c.score + '/100 — ' + c.raw]),
     ['Sales — last 12 mo', s.sales12 + ' (' + s.resaleSales12 + ' resale / ' + s.newConShare + '% new-con)'],
     ['Sales — last 90 days', s.sales3],
@@ -617,7 +687,9 @@ function buildStats() {
   sh.autoResizeColumns(1, 2);
   buildDashboard_(s);
   try { buildPricingTab_(s.pm); } catch (e) { Logger.log('Pricing model: ' + e); }
+  try { buildCmaTab_(s.cm, s.pm, s.cmTH); } catch (e) { Logger.log('CMA tab: ' + e); }
   CacheService.getScriptCache().put('stats', JSON.stringify(s), 21600);
+  return abs ? 'absorbed ' + abs.solds + ' solds · ' + abs.actives + ' actives' : 'rebuilt from existing data';
 }
 
 // ---------- ONE-TIME WORKBOOK SETUP (run this FIRST) ----------
@@ -632,13 +704,13 @@ function setupWorkbook() {
   const rm = tab('ReadMe');
   rm.clear();
   rm.getRange('A1:B9').setValues([
-    ['TM MARKET UPDATE — DATA WORKBOOK (' + VERSION + ')', ''],
+    [CONFIG.farmShort + ' MARKET UPDATE — DATA WORKBOOK (' + VERSION + ')', ''],
     [CONFIG.agentBrand + ' · ' + CONFIG.brokerage, ''],
     [CONFIG.agentPhone + ' · ' + CONFIG.agentEmail, ''],
     ['', ''],
     ['MONTHLY WORKFLOW', ''],
-    ['1. Import fresh WFRMLS export', 'Data tab ← combined actives+solds export (res_tm_market_report). Multiple exports can be pasted one under the other — duplicates are removed by MLS#'],
-    ['2. Run buildStats()', 'refreshes Stats + Dashboard tabs and the web app page'],
+    ['1. Paste fresh WFRMLS export', '📥 Paste tab ← the month\'s export (recent solds + ALL current actives), headers included'],
+    ['2. Run ▶ Build Stats', 'absorbs the paste into Data (date-stamped, deduped, trimmed to 25 mo) and refreshes Stats + Dashboard + Pricing Model'],
     ['3. Run generateScript()', 'drafts this month\'s video script in the Script tab'],
     ['4. Run publishToGitHub()', 'pushes the report live to your GitHub Pages URL for sharing']
   ]);
@@ -661,10 +733,12 @@ function setupWorkbook() {
     .setBackground(b.olive).setFontColor(b.cream).setFontWeight('bold');
   dataSh.setFrozenRows(1);
 
-  tab('Stats'); tab('Script'); tab('Dashboard'); tab('Pricing Model');
+  tab('Stats'); tab('Script'); tab('Dashboard'); tab('Pricing Model'); tab('📐 CMA Adjustments'); tab('Import Log');
+  const pasteSh = tab(PASTE_TAB);
+  if (pasteSh.getLastRow() === 0) buildPasteBanner_(pasteSh);
   buildRunTab_();
   // order tabs (old Solds/Actives tabs, if present, sort after these)
-  ['▶ Run','Dashboard','Stats','Script','Pricing Model','Data','ReadMe'].forEach((n, i) => {
+  ['▶ Run', PASTE_TAB,'Dashboard','Stats','Script','Pricing Model','📐 CMA Adjustments','Data','Import Log','ReadMe'].forEach((n, i) => {
     ss.setActiveSheet(ss.getSheetByName(n)); ss.moveActiveSheet(i + 1);
   });
   const s1 = ss.getSheetByName('Sheet1');
@@ -691,12 +765,12 @@ function buildDashboard_(s) {
     .setBackground(b.navy).setFontColor(b.cream).setFontSize(15).setFontWeight('bold')
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   sh.getRange('A2:D2').merge()
-    .setValue(CONFIG.agentBrand + '  ·  ' + CONFIG.brokerage + '  ·  ' + CONFIG.agentPhone + '  ·  Updated ' + s.updated)
+    .setValue(CONFIG.agentBrand + '  ·  ' + CONFIG.brokerage + '  ·  ' + CONFIG.agentPhone + '  ·  Updated ' + s.updated + '  ·  ' + VERSION)
     .setBackground(b.camel).setFontColor(b.navy).setHorizontalAlignment('center').setFontStyle('italic');
 
   // TM Index banner
   sh.getRange('A3:D3').merge()
-    .setValue('TM MARKET INDEX:  ' + s.index + '  —  ' + idxLabel_(s.index).toUpperCase() +
+    .setValue(CONFIG.farmShort + ' MARKET INDEX:  ' + s.index + '  —  ' + idxLabel_(s.index).toUpperCase() +
       '   |   SUPPLY: ' + (s.moi ? s.moi.toFixed(1) + ' MO — ' + s.moiRating.toUpperCase() : '—'))
     .setBackground(b.terracotta).setFontColor(b.cream).setFontSize(13).setFontWeight('bold')
     .setHorizontalAlignment('center');
@@ -769,23 +843,23 @@ function generateScript() {
   const idxLabel = idxLabel_(s.index).toLowerCase();
 
   const blocks = [
-    ['BLOCK', 'SCRIPT — TM Market Update ' + month],
+    ['BLOCK', 'SCRIPT — ' + CONFIG.farmShort + ' Market Update ' + month],
     ['1. HOOK (0:00-0:20)',
-      `[INSERT INSIGHT-OF-THE-MONTH AS A CLAIM. Ex: "$/sqft in Traverse Mountain runs from ` +
+      `[INSERT INSIGHT-OF-THE-MONTH AS A CLAIM. Ex: "$/sqft in ${CONFIG.farmName} runs from ` +
       `$${Math.round(Math.min(...s.segments.map(t => t.medPpsf || 999)))} to ` +
       `$${Math.round(Math.max(...s.segments.map(t => t.medPpsf || 0)))} depending on segment — ` +
       `if your estimate used one number, it's wrong."] ` +
-      `I'm Lance, I live in the data, and this is your ${month} Traverse Mountain Market Update.`],
+      `I'm Lance, I live in the data, and this is your ${month} ${CONFIG.farmName} Market Update.`],
     ['2. DASHBOARD (0:20-1:30)',
-      `Here's the mountain in numbers. In just the last 30 days, ${s.sales30} homes sold. ` +
+      `${CONFIG.numbersLine} In just the last 30 days, ${s.sales30} homes sold. ` +
       `Over the last 90 days, ${s.sales3}. ` +
       `Median price per square foot: $${Math.round(s.medPpsf3)}. ` +
       `Median days on market: ${s.medDom3}${domPrev ? ` — compared to ${domPrev} last quarter` : ''}. ` +
       `Sale-to-list ratio: ${s.stl3.toFixed(1)}% — correctly priced homes are getting their number. ` +
       `Now the industry-standard number: Months of Supply. ${s.activeCount} active listings at the current ` +
       `sales pace = ${s.moi.toFixed(1)} months. The standard scale says under 4 is a seller's market, ` +
-      `4 to 6 is balanced, over 6 is a buyer's market — so TM is officially a ${s.moiRating.toLowerCase()}. ` +
-      `And my TM Market Index — which blends supply with velocity, price momentum, DOM, and sale-to-list — ` +
+      `4 to 6 is balanced, over 6 is a buyer's market — so ${CONFIG.farmShort} is officially a ${s.moiRating.toLowerCase()}. ` +
+      `And my ${CONFIG.farmShort} Market Index — which blends supply with velocity, price momentum, DOM, and sale-to-list — ` +
       `sits at ${s.index}, where fifty is perfectly balanced: that's ${idxLabel}. ${reconcile_(s)} ` +
       `What's driving it this month: ${[...s.components].sort((a, b) => b.score - a.score)
         .map(c => c.name.toLowerCase() + ' at ' + c.score).join(', ')}.`],
@@ -797,10 +871,10 @@ function generateScript() {
       `If you're selling: [one sentence — e.g. pricing precision matters, resale competes with builders]. ` +
       `If you're buying: [one sentence — e.g. what ${s.medDom3}-day DOM and ${s.moi.toFixed(1)} months of supply mean for your offer].`],
     ['5. CTA (4:00-4:30)',
-      `I publish the live Traverse Mountain data — the numbers Zillow legally can't show you — at the link below, ` +
+      `I publish the live ${CONFIG.farmName} data — the numbers Zillow legally can't show you — at the link below, ` +
       `updated every month. Want YOUR home's real number? Comment "DATA" or hit the link. ` +
       `No pressure, just data. See you next month.`],
-    ['TITLE', `Traverse Mountain Market Update ${month} — [HOOK AS CLAIM]`],
+    ['TITLE', `${CONFIG.farmName} Market Update ${month} — [HOOK AS CLAIM]`],
     ['STAT CARDS', `${s.sales3} sold (90d) · $${Math.round(s.medPpsf3)}/sqft · ${s.medDom3} DOM · ` +
       `${s.stl3.toFixed(1)}% sale-to-list · ${s.moi.toFixed(1)} mo inventory · Index ${s.index}`]
   ];
@@ -960,7 +1034,7 @@ function buildHtml_(s) {
     <div class="updated">${CONFIG.agentBrand} · ${CONFIG.brokerage}</div>
   </header>
   <div class="index-card">
-    <div>TM MARKET INDEX</div>
+    <div>${CONFIG.farmShort} MARKET INDEX</div>
     <div class="index-num">${s.index}</div>
     <div>${idxLabel_(s.index)}</div>
     <div class="idx-scale">
@@ -980,7 +1054,7 @@ function buildHtml_(s) {
       </div>
       <div class="comp-raw">${c.raw} · <i>${c.how}</i></div>`).join('')}
     </div>
-    <div class="index-note">The TM Market Index is my proprietary composite: five components, equally weighted,
+    <div class="index-note">The ${CONFIG.farmShort} Market Index is my proprietary composite: five components, equally weighted,
     from the last 90 days of MLS data. 50 = a perfectly balanced market — above 50 favors sellers, below favors buyers.</div>
   </div>
 
@@ -1009,7 +1083,7 @@ function buildHtml_(s) {
       <table class="vt">
         <tr><th></th><th>Verdict</th><th>Why</th></tr>
         <tr><td>Months of Supply</td><td><b>${s.moiRating}</b></td><td>Counts only inventory — ${s.moi ? s.moi.toFixed(1) : '—'} months is ${s.moi < 4 ? 'scarce' : s.moi <= 6 ? 'balanced' : 'plentiful'}</td></tr>
-        <tr><td>TM Index (${s.index})</td><td><b>${idxLabel_(s.index)}</b></td><td>Adds sales pace, price momentum &amp; negotiation signals</td></tr>
+        <tr><td>${CONFIG.farmShort} Index (${s.index})</td><td><b>${idxLabel_(s.index)}</b></td><td>Adds sales pace, price momentum &amp; negotiation signals</td></tr>
       </table>
       <div class="vt-bottom"><b>BOTTOM LINE:</b> ${bottomLine_(s)}</div>
     </div>
@@ -1038,7 +1112,7 @@ function buildHtml_(s) {
       }).join('') + `
         <div class="ignore-box">
           <div class="ignore-title">🚫 THE NUMBER TO IGNORE</div>
-          <div class="kv-row"><span>The online "TM average"</span><b><s>$${blend}/sqft</s></b></div>
+          <div class="kv-row"><span>The online "${CONFIG.farmShort} average"</span><b><s>$${blend}/sqft</s></b></div>
           <div class="ignore-why">Blends townhomes with luxury, new with resale — nothing actually sells at it.</div>
         </div>
         <div class="ppsf-close">Your segment's rate = the starting point&nbsp;&nbsp;·&nbsp;&nbsp;a CMA = the answer</div>`;
@@ -1046,19 +1120,20 @@ function buildHtml_(s) {
   </div>
   ${s.pm && s.pm.ok && s.pm.medErr < 10 ? `
   <div class="pm-card">
-    <div class="mos-kicker">WHAT A SQUARE FOOT IS ACTUALLY WORTH IN TM</div>
+    <div class="mos-kicker">WHAT A SQUARE FOOT IS ACTUALLY WORTH IN ${CONFIG.farmShort.toUpperCase()}</div>
     <div class="pm-sub">(resale single-family)</div>
     <div class="kv-row"><span>Above-grade living space</span><span><b>$${Math.round(s.pm.ag)}/sqft</b> · 100%</span></div>
     <div class="kv-row"><span>Finished basement</span><span><b>$${Math.round(s.pm.fin)}/sqft</b> · ${Math.round(s.pm.fin / s.pm.ag * 100)}%</span></div>
     <div class="kv-row"><span>Unfinished basement</span><span><b>$${Math.round(s.pm.unf)}/sqft</b> · ${Math.round(s.pm.unf / s.pm.ag * 100)}%</span></div>
     <div class="kv-row"><span>Walkout/daylight basement</span><span><b>+$${Math.round(s.pm.walk / 1000)}K</b> · flat premium</span></div>
-    <div class="kv-head" style="margin-top:12px">📐 TM PRICING MODEL</div>
+    <div class="kv-head" style="margin-top:12px">📐 ${CONFIG.farmShort.toUpperCase()} PRICING MODEL</div>
     <div class="kv-row"><span>Built from</span><span>${s.pm.n} resale sales · 24 months</span></div>
     <div class="kv-row"><span>Accuracy</span><span>${s.pm.medErr < 6 ? '🟢' : '🟡 beta'} · typical error ±${Math.round(s.pm.medErr)}%</span></div>
     <div class="kv-row"><span>Key finding</span><span>Basements worth ${Math.round(s.pm.fin / s.pm.ag * 100)}% here — not the old "half" rule</span></div>
     <div class="kv-row"><span>Your exact number</span><span><b>↓ get the real number below</b></span></div>
+    ${s.cm && s.cm.ok ? `<div class="kv-row"><span>For agents</span><span><a href="cma-rates/" style="color:var(--terra);font-weight:bold">the full ${CONFIG.farmShort} adjustment table →</a></span></div>` : ''}
   </div>` : ''}
-  <h3>Homes sold by month — all of Traverse Mountain (last 12 months)</h3>
+  <h3>Homes sold by month — ${CONFIG.areaLine} (last 12 months)</h3>
   <div class="chart-outer">${yAxis}<div class="chart">${bars}</div></div>
   <h3>Market segments — last 12 months</h3>
   <table><tr><th>Segment</th><th>Sold</th><th>Med. Price</th><th>$/sqft</th><th>DOM</th></tr>${segRows}</table>
@@ -1092,34 +1167,455 @@ function publishToGitHub() {
   if (g.owner === 'YOUR_GITHUB_USERNAME') throw new Error('Fill in CONFIG.github.owner with your GitHub username.');
 
   const s = computeStats_();
-  const html = buildHtml_(s);
-  const url = `https://api.github.com/repos/${g.owner}/${g.repo}/contents/${g.path}`;
-  const headers = {
-    Authorization: 'Bearer ' + token,
-    Accept: 'application/vnd.github+json'
-  };
+  ghPut_(g, token, g.path, buildHtml_(s),
+    CONFIG.farmShort + ' Market Update ' + s.updated + ' (' + VERSION + ')');
+  if (s.cm && s.cm.ok) {
+    ghPut_(g, token, g.path.replace(/index\.html$/, 'cma-rates/index.html'), buildCmaHtml_(s),
+      CONFIG.farmShort + ' CMA adjustment table ' + s.updated + ' (' + VERSION + ')');
+  }
+  const live = `https://${g.owner}.github.io/${g.repo}/${g.path.replace(/index\.html$/, '')}`;
+  Logger.log('✅ Published: ' + live + (s.cm && s.cm.ok ? ' (+ cma-rates/)' : ''));
+  return live;
+}
 
-  // get current file SHA if it exists (required by GitHub to update)
+// Create-or-update one file in the repo.
+function ghPut_(g, token, path, html, msg) {
+  const url = `https://api.github.com/repos/${g.owner}/${g.repo}/contents/${path}`;
+  const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
   let sha = null;
   const probe = UrlFetchApp.fetch(url + '?ref=' + g.branch, { headers, muteHttpExceptions: true });
   if (probe.getResponseCode() === 200) sha = JSON.parse(probe.getContentText()).sha;
-
-  const payload = {
-    message: 'TM Market Update ' + s.updated + ' (' + VERSION + ')',
-    content: Utilities.base64Encode(html, Utilities.Charset.UTF_8),
-    branch: g.branch
-  };
+  const payload = { message: msg, content: Utilities.base64Encode(html, Utilities.Charset.UTF_8), branch: g.branch };
   if (sha) payload.sha = sha;
-
-  const res = UrlFetchApp.fetch(url, {
-    method: 'put', headers, contentType: 'application/json',
-    payload: JSON.stringify(payload), muteHttpExceptions: true
-  });
+  const res = UrlFetchApp.fetch(url, { method: 'put', headers, contentType: 'application/json',
+    payload: JSON.stringify(payload), muteHttpExceptions: true });
   const code = res.getResponseCode();
-  if (code === 200 || code === 201) {
-    const live = `https://${g.owner}.github.io/${g.repo}/`;
-    Logger.log('✅ Published: ' + live);
-    return live;
+  if (code !== 200 && code !== 201) {
+    throw new Error('GitHub publish failed (' + code + ') for ' + path + ': ' + res.getContentText());
   }
-  throw new Error('GitHub publish failed (' + code + '): ' + res.getContentText());
+}
+
+// ============================================================
+// v24 — 📥 PASTE INBOX, DATA MANAGEMENT, 🔑 TOKEN, ✅ CHECK SETUP
+// ============================================================
+const PASTE_TAB = '📥 Paste';
+
+function buildPasteBanner_(sh) {
+  sh.getRange('A1:F1').merge()
+    .setValue('📥 PASTE EXPORTS BELOW THIS ROW — headers included. ▶ Build Stats absorbs them into Data and clears this tab.')
+    .setBackground(CONFIG.brand.camel).setFontColor(CONFIG.brand.navy)
+    .setFontWeight('bold').setHorizontalAlignment('center');
+  sh.setRowHeight(1, 32);
+}
+
+// Splits a value grid into export blocks (header row + its data rows).
+function pasteBlocks_(v) {
+  const blocks = []; let cur = null;
+  v.forEach(row => {
+    const first = String(row[0]).toLowerCase().trim();
+    const joined = row.map(x => String(x).toLowerCase()).join('|');
+    if (first === 'sold date' || (first === 'mls#' && joined.includes('agent'))) {
+      cur = { header: row.slice(), old: first === 'mls#', rows: [] };
+      blocks.push(cur); return;
+    }
+    if (!cur) return;
+    if (row.every(c => String(c).trim() === '')) return;
+    cur.rows.push(row.slice());
+  });
+  return blocks;
+}
+
+// 📥 Paste → Data. Stamps every row with the import date, appends as a
+// block, logs the import, then compacts Data (dedupe + snapshot + trim).
+function absorbPaste_() {
+  const ss = SpreadsheetApp.getActive();
+  const src = ss.getSheetByName(PASTE_TAB);
+  if (!src || src.getLastRow() < 2) return null;
+  const blocks = pasteBlocks_(src.getDataRange().getValues());
+  const total = blocks.reduce((s, b) => s + b.rows.length, 0);
+  if (!total) return null;
+  const stamp = new Date();
+  const dataSh = ss.getSheetByName('Data') || ss.insertSheet('Data');
+  const b = CONFIG.brand;
+  let sc = 0, ac = 0;
+  blocks.forEach(blk => {
+    if (!blk.rows.length) return;
+    const w = blk.header.length;
+    const hdr = blk.header.concat(['Imported']);
+    const si = blk.header.map(x => String(x).toLowerCase().trim()).indexOf('status');
+    const rows = blk.rows.map(r => {
+      const st = blk.old ? 'ACTIVE' : (si > -1 ? String(r[si]).trim().toUpperCase() : 'SOLD');
+      if (st === 'ACTIVE') ac++; else if (st === 'SOLD') sc++;
+      const rr = r.slice(0, w);
+      while (rr.length < w) rr.push('');
+      return rr.concat([stamp]);
+    });
+    const r0 = dataSh.getLastRow() + 1;
+    dataSh.getRange(r0, 1, 1, hdr.length).setValues([hdr])
+      .setBackground(b.olive).setFontColor(b.cream).setFontWeight('bold');
+    dataSh.getRange(r0 + 1, 1, rows.length, hdr.length).setValues(rows);
+  });
+  src.clear();
+  buildPasteBanner_(src);
+  logImport_(stamp, sc, ac);
+  try { compactData_(); } catch (e) { Logger.log('Compact skipped: ' + e); }
+  return { solds: sc, actives: ac };
+}
+
+function logImport_(stamp, sc, ac) {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName('Import Log') || ss.insertSheet('Import Log');
+  if (sh.getLastRow() === 0) {
+    sh.getRange(1, 1, 1, 3).setValues([['IMPORT HISTORY', 'solds absorbed', 'actives absorbed']])
+      .setBackground(CONFIG.brand.navy).setFontColor(CONFIG.brand.cream).setFontWeight('bold');
+    sh.setColumnWidth(1, 180);
+  }
+  sh.appendRow([stamp, sc, ac]);
+}
+
+// Rewrites the Data tab lean: duplicate MLS# resolved (newest import wins,
+// SOLD beats ACTIVE), stale actives dropped (only the latest snapshot kept),
+// solds older than 25 months dropped. Raw columns preserved block-by-block.
+function compactData_() {
+  const ss = SpreadsheetApp.getActive();
+  const sh = ss.getSheetByName('Data');
+  if (!sh || sh.getLastRow() === 0) return;
+  const v = sh.getDataRange().getValues();
+  const W = v[0].length;
+  const blocks = pasteBlocks_(v);
+  if (!blocks.length) return;
+  const cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - 25);
+  const tms = d => d ? d.getTime() : 0;
+  const recs = [];
+  blocks.forEach((blk, bi) => {
+    const h = blk.header.map(x => String(x).toLowerCase().trim());
+    const ix = l => h.indexOf(l);
+    blk.rows.forEach(row => {
+      const mls = ix('mls#') > -1 ? String(row[ix('mls#')]).trim() : '';
+      const st = blk.old ? 'ACTIVE' : (ix('status') > -1 ? String(row[ix('status')]).trim().toUpperCase() : 'SOLD');
+      const dv = !blk.old && ix('sold date') > -1 ? row[ix('sold date')] : null;
+      let sd = dv instanceof Date ? dv : (dv ? new Date(dv) : null);
+      if (sd && isNaN(sd)) sd = null;
+      const iv = ix('imported') > -1 ? row[ix('imported')] : null;
+      let imp = iv instanceof Date ? iv : (iv ? new Date(iv) : null);
+      if (imp && isNaN(imp)) imp = null;
+      recs.push({ bi, row, mls, st, sd, imp });
+    });
+  });
+  const best = {};
+  recs.forEach(r => {
+    if (!r.mls) return;
+    const o = best[r.mls];
+    if (!o) { best[r.mls] = r; return; }
+    if (tms(r.imp) >= tms(o.imp) && !(o.st === 'SOLD' && r.st !== 'SOLD')) best[r.mls] = r;
+  });
+  const soldMls = new Set(recs.filter(r => r.st === 'SOLD' && r.mls).map(r => r.mls));
+  const snapImp = Math.max(0, ...recs.filter(r => r.st !== 'SOLD').map(r => tms(r.imp)));
+  const keep = r => {
+    if (r.mls && best[r.mls] && best[r.mls] !== r) return false;
+    if (r.st === 'SOLD') return !r.sd || r.sd >= cutoff;
+    if (r.mls && soldMls.has(r.mls)) return false;
+    return tms(r.imp) === snapImp; // actives & other statuses: latest snapshot only
+  };
+  const out = [];
+  blocks.forEach((blk, bi) => {
+    const rows = recs.filter(r => r.bi === bi && keep(r)).map(r => r.row);
+    if (rows.length) out.push({ header: blk.header, rows });
+  });
+  sh.clear();
+  const b = CONFIG.brand;
+  let r0 = 1;
+  out.forEach(blk => {
+    sh.getRange(r0, 1, 1, W).setValues([blk.header.slice(0, W)])
+      .setBackground(b.olive).setFontColor(b.cream).setFontWeight('bold');
+    sh.getRange(r0 + 1, 1, blk.rows.length, W).setValues(blk.rows.map(r => r.slice(0, W)));
+    r0 += 1 + blk.rows.length;
+  });
+}
+
+// 🔑 One-time per sheet copy: paste the GitHub token into a prompt box.
+function setGithubToken() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('🔑 Set GitHub Token',
+    'Paste your GitHub fine-grained token (github_pat_…).\nStored in this sheet\'s Script Properties — never in a cell.',
+    ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const t = r.getResponseText().trim();
+  if (!t) { ui.alert('Nothing saved — the box was empty.'); return; }
+  PropertiesService.getScriptProperties().setProperty('GITHUB_TOKEN', t);
+  ui.alert('✅ Token saved (…' + t.slice(-4) + '). 🌐 Publish to GitHub is ready.');
+}
+
+// ✅ Setup health check — safe to run anytime, changes nothing.
+function checkSetup() {
+  const p = PropertiesService.getScriptProperties();
+  const token = (p.getProperty('GITHUB_TOKEN') || '').trim();
+  const form = p.getProperty('LEAD_FORM_URL') || '';
+  const trig = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
+  let dataLine;
+  try {
+    const d = scanAll_();
+    const newest = d.solds.reduce((m, r) => r.date && (!m || r.date > m) ? r.date : m, null);
+    dataLine = d.solds.length + ' solds (newest ' +
+      (newest ? Utilities.formatDate(newest, Session.getScriptTimeZone(), 'MMM d, yyyy') : '—') +
+      ') · ' + d.actives.length + ' actives';
+  } catch (e) { dataLine = '✗ ' + e.message; }
+  const lines = [
+    'Pipeline: ' + VERSION,
+    'Location: ' + CONFIG.farmName + ' → https://' + CONFIG.github.owner + '.github.io/' +
+      CONFIG.github.repo + '/' + CONFIG.github.path.replace(/index\.html$/, ''),
+    'GitHub token: ' + (token ? '✓ saved (…' + token.slice(-4) + ')' : '✗ MISSING — run 🔑 Set GitHub Token'),
+    'Lead form: ' + (form ? '✓ live' : '✗ not created — run 📝 Setup Lead Form'),
+    'Run-tab trigger: ' + (trig.indexOf('onRunEdit') > -1 ? '✓ installed' : '✗ MISSING — run 🔘 Install Run-Tab Trigger'),
+    'Lead-alert trigger: ' + (trig.indexOf('onLeadSubmit') > -1 ? '✓ installed' : (form ? '✗ MISSING — rerun 📝 Setup Lead Form' : '— created with lead form')),
+    'Data: ' + dataLine
+  ];
+  return lines.join('\n');
+}
+function checkSetupAlert() {
+  SpreadsheetApp.getUi().alert('✅ CHECK SETUP — ' + CONFIG.farmShort + ' (' + VERSION + ')\n\n' + checkSetup());
+}
+
+// ============================================================
+// v25 — 📐 CMA ADJUSTMENT ENGINE
+// ============================================================
+// Full hedonic model:
+// price ≈ base + rL1·MainSqFt + rUp·UpperSqFt + rFin·FinBsmt + rUnf·UnfBsmt
+//        + rAcre·Acres + walkout + rGar·GarageBays + rAge·Age
+//        + rFB·FullBaths + rTQ·¾Baths + rHB·½Baths + rBd·Bedrooms
+function cmaModel_(solds) {
+  const yNow = new Date().getFullYear();
+  const data = solds.filter(r =>
+    r.yb && r.yb < CONFIG.newConYear && !r.isTH && r.l1 && r.l1 >= 300 &&
+    r.bf != null && r.sp <= 1500000);
+  if (data.length < 60) return { ok: false, n: data.length };
+  const rows = data.map(r => ({
+    y: r.sp,
+    x: [1, r.l1, r.up || 0, r.bs * r.bf / 100, r.bs * (1 - r.bf / 100),
+        r.acres || 0, r.walk ? 1 : 0, r.gar || 0, yNow - r.yb,
+        r.fb || 0, r.tq || 0, r.hb || 0, r.bd || 0]
+  }));
+  const n = 13;
+  const XtX = [], Xty = [];
+  for (let a = 0; a < n; a++) {
+    Xty[a] = rows.reduce((s2, r) => s2 + r.x[a] * r.y, 0);
+    XtX[a] = [];
+    for (let c = 0; c < n; c++) XtX[a][c] = rows.reduce((s2, r) => s2 + r.x[a] * r.x[c], 0);
+  }
+  const A = XtX.map((row, i) => row.concat([Xty[i]]));
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    const tmp = A[c]; A[c] = A[p]; A[p] = tmp;
+    for (let r = 0; r < n; r++) {
+      if (r !== c && A[c][c]) {
+        const f = A[r][c] / A[c][c];
+        for (let k = 0; k <= n; k++) A[r][k] -= f * A[c][k];
+      }
+    }
+  }
+  const beta = A.map((row, i) => row[n] / row[i]);
+  if (beta.some(v => !isFinite(v))) return { ok: false, n: rows.length };
+  const preds = rows.map(r => r.x.reduce((s2, x, i) => s2 + x * beta[i], 0));
+  const errs = rows.map((r, i) => Math.abs(r.y - preds[i]) / r.y * 100).sort((a2, b2) => a2 - b2);
+  const ybar = rows.reduce((s2, r) => s2 + r.y, 0) / rows.length;
+  const ssRes = rows.reduce((s2, r, i) => s2 + Math.pow(r.y - preds[i], 2), 0);
+  const ssTot = rows.reduce((s2, r) => s2 + Math.pow(r.y - ybar, 2), 0);
+  return {
+    ok: true, n: rows.length, r2: 1 - ssRes / ssTot, medErr: errs[Math.floor(errs.length / 2)],
+    base: beta[0], l1: beta[1], up: beta[2], fin: beta[3], unf: beta[4],
+    acre: beta[5], walk: beta[6], gar: beta[7], age: beta[8],
+    fb: beta[9], tq: beta[10], hb: beta[11], bd: beta[12]
+  };
+}
+
+// Shared row data for the tab + public page. Basement rates come from the
+// stable 5-component model when available.
+function cmaRows_(cm, pm) {
+  const $K = v => (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString();
+  const fin = pm && pm.ok ? pm.fin : cm.fin;
+  const unf = pm && pm.ok ? pm.unf : cm.unf;
+  return [
+    ['L1 (main floor) sqft', '$' + Math.round(cm.l1) + '/sqft', '🟢 main-level space typically worth ~2× upper (rambler premium)'],
+    ['L2/L3/L4 (upper) sqft', '$' + Math.round(cm.up) + '/sqft', '🟢'],
+    ['Finished basement sqft', '$' + Math.round(fin) + '/sqft', '🟢 from the stable 5-component model'],
+    ['Unfinished basement sqft', '$' + Math.round(unf) + '/sqft', '🟡'],
+    ['Walkout/daylight basement', $K(cm.walk) + ' flat', '🟢 applies once'],
+    ['Garage capacity', $K(cm.gar) + ' per bay', '🟢'],
+    ['Acres (lot)', $K(cm.acre) + ' per acre', '🟢'],
+    ['Year built', $K(cm.age) + ' per year of age', '🟡 use for ±10-yr gaps, not 30'],
+    ['Full baths', $K(cm.fb), '🟡'],
+    ['¾ baths', $K(cm.tq), '🟡 small sample'],
+    ['½ baths', $K(cm.hb), "🔴 noise — don't adjust"],
+    ['Bedrooms', '$0', '🔴 do NOT adjust — beds are priced inside sqft; more beds at same sqft = chopped-up floor plan'],
+    ['Carport capacity', '—', 'not in export'],
+    ['Total SqFt / GL Area / $ per sold sqft', '—', 'computed outputs, not adjustments']
+  ];
+}
+
+function buildCmaTab_(cm, pm, cmTH) {
+  const ss = SpreadsheetApp.getActive();
+  const b = CONFIG.brand;
+  const sh = ss.getSheetByName('📐 CMA Adjustments') || ss.insertSheet('📐 CMA Adjustments');
+  sh.clear();
+  sh.getRange('A1:C1').merge()
+    .setValue('📐 ' + CONFIG.farmShort.toUpperCase() + ' CMA ADJUSTMENT TABLE — refits on every ▶ Build Stats')
+    .setBackground(b.navy).setFontColor(b.cream).setFontWeight('bold').setHorizontalAlignment('center');
+  if (!cm || !cm.ok) {
+    sh.getRange('A3').setValue('Not enough model data (' + (cm ? cm.n : 0) +
+      ' usable resale SFH rows; need 60+). Paste more history into ' + PASTE_TAB + '.');
+    return;
+  }
+  const rows = [['CMA FIELD', 'ADJUSTMENT', 'CONFIDENCE / NOTE']].concat(cmaRows_(cm, pm));
+  rows.push(['', '', '']);
+  rows.push(['MODEL', 'R² ' + cm.r2.toFixed(3) + ' · median error ±' + cm.medErr.toFixed(1) + '%',
+    cm.n + ' resale SFH sales']);
+  if (pm && pm.ok) rows.push(['ANCHOR ESTIMATE',
+    '= $' + Math.round(pm.intercept).toLocaleString() + ' + AG×$' + Math.round(pm.ag) +
+    ' + finBsmt×$' + Math.round(pm.fin) + ' + unfBsmt×$' + Math.round(pm.unf) +
+    ' + acres×$' + Math.round(pm.acre).toLocaleString() +
+    ' (+$' + Math.round(pm.walk).toLocaleString() + ' walkout)', '±' + pm.medErr.toFixed(0) + '%']);
+  rows.push(['SCOPE', 'Resale single-family ≤ $1.5M in ' + CONFIG.farmName +
+    ' only — do not stretch to luxury' + (cmTH && cmTH.ok ? '' : ', townhomes,') +
+    ' or other areas', 'refits monthly']);
+  if (cmTH && cmTH.ok) {
+    rows.push(['', '', '']);
+    rows.push(['TOWNHOME / CONDO MODEL (resale)',
+      'R² ' + cmTH.r2.toFixed(3) + ' · median error ±' + cmTH.medErr.toFixed(1) + '%',
+      cmTH.n + ' sales']);
+    cmaRowsTH_(cmTH).forEach(r => rows.push(r));
+  }
+  sh.getRange(3, 1, rows.length, 3).setValues(rows);
+  sh.getRange(3, 1, 1, 3).setBackground(b.olive).setFontColor(b.cream).setFontWeight('bold');
+  for (let i = 1; i < rows.length; i++) if (i % 2 === 0) sh.getRange(3 + i, 1, 1, 3).setBackground(b.cream);
+  sh.setColumnWidth(1, 240).setColumnWidth(2, 340).setColumnWidth(3, 420);
+}
+
+// Public agent-facing page — published to cma-rates/ next to the report.
+function buildCmaHtml_(s) {
+  const b = CONFIG.brand, cm = s.cm, pm = s.pm;
+  const logo = getLogoDataUri_();
+  const leadUrl = leadFormUrl_() || `mailto:${CONFIG.agentEmail}?subject=CMA request — ${CONFIG.farmName}`;
+  const rowsHtml = cmaRows_(cm, pm).map(r =>
+    `<div class="kv-row"><span>${r[0]}</span><span><b>${r[1]}</b></span></div><div class="note">${r[2]}</div>`).join('');
+  return `<!DOCTYPE html><html><head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>${CONFIG.farmName} CMA Adjustment Table | ${CONFIG.agentName}</title>
+  <style>
+    :root{--terra:${b.terracotta};--olive:${b.olive};--navy:${b.navy};--camel:${b.camel};--cream:${b.cream}}
+    *{box-sizing:border-box;margin:0}
+    body{font-family:Georgia,serif;background:var(--cream);color:var(--navy)}
+    .wrap{max-width:640px;margin:0 auto;padding:20px}
+    header{text-align:center;padding:24px 0;border-bottom:3px solid var(--terra)}
+    header img{max-height:70px}
+    h1{font-size:1.4em;margin-top:10px}
+    .updated{color:var(--olive);font-size:.85em;font-style:italic}
+    .card{background:#fff;border-radius:12px;padding:18px;margin:16px 0;border-top:4px solid var(--navy)}
+    .kicker{font-size:.72em;letter-spacing:.13em;color:var(--olive);font-weight:bold}
+    .kv-row{display:flex;justify-content:space-between;gap:10px;font-size:.85em;padding:6px 0 0;border-top:1px solid rgba(107,122,58,.15)}
+    .note{font-size:.68em;color:var(--olive);font-style:italic;padding:2px 0 6px}
+    .warn{margin-top:12px;border:2px solid var(--terra);border-radius:8px;padding:10px;font-size:.78em;background:rgba(244,237,228,.5)}
+    .cta{display:block;background:var(--terra);color:var(--cream);text-align:center;padding:14px;border-radius:10px;text-decoration:none;margin:12px 0}
+    footer{text-align:center;font-size:.72em;color:var(--olive);padding:18px 0}
+  </style></head><body><div class="wrap">
+  <header>
+    ${logo ? `<img src="${logo}" alt="${CONFIG.agentBrand}">` : ''}
+    <h1>The ${CONFIG.farmShort} Adjustment Table</h1>
+    <div class="updated">What each feature is actually worth in ${CONFIG.farmName} · fit on ${cm.n} resale sales · Updated ${s.updated}</div>
+    <div class="updated">${CONFIG.agentBrand} · ${CONFIG.brokerage}</div>
+  </header>
+  <div class="card">
+    <div class="kicker">FIELD-BY-FIELD ADJUSTMENTS (resale single-family)</div>
+    ${rowsHtml}
+  </div>
+  ${s.cmTH && s.cmTH.ok ? `<div class="card">
+    <div class="kicker">TOWNHOME / CONDO ADJUSTMENTS (resale)</div>
+    ${cmaRowsTH_(s.cmTH).map(r => `<div class="kv-row"><span>${r[0]}</span><span><b>${r[1]}</b></span></div><div class="note">${r[2]}</div>`).join('')}
+    <div class="note">Model: R² ${s.cmTH.r2.toFixed(2)} · median error ±${s.cmTH.medErr.toFixed(1)}% · ${s.cmTH.n} resale town/condo sales</div>
+  </div>` : ''}
+  ${pm && pm.ok ? `<div class="card">
+    <div class="kicker">📐 ANCHOR ESTIMATE FORMULA</div>
+    <div class="kv-row"><span>Value ≈</span><span><b>$${Math.round(pm.intercept).toLocaleString()} + AG×$${Math.round(pm.ag)} + finBsmt×$${Math.round(pm.fin)} + unfBsmt×$${Math.round(pm.unf)} + acres×$${Math.round(pm.acre).toLocaleString()} (+$${Math.round(pm.walk).toLocaleString()} if walkout)</b></span></div>
+    <div class="note">Anchor the estimate first, then adjust each comp to the subject with the table above. Walkout premium applies once.</div>
+  </div>` : ''}
+  <div class="card">
+    <div class="kicker">MODEL QUALITY & SCOPE</div>
+    <div class="kv-row"><span>Accuracy</span><span><b>R² ${cm.r2.toFixed(2)} · median error ±${cm.medErr.toFixed(1)}%</b></span></div>
+    <div class="kv-row"><span>Sample</span><span><b>${cm.n} resale SFH sales · rolling window</b></span></div>
+    <div class="warn">🚫 Scope: resale ≤ $1.5M in ${CONFIG.farmName} only. Do not stretch to luxury${s.cmTH && s.cmTH.ok ? '' : ', townhomes,'} or other areas — they need their own fit. Rates refit monthly from MLS sold data.</div>
+  </div>
+  <a class="cta" href="../">← Full ${CONFIG.farmName} market report</a>
+  <a class="cta" style="background:var(--olive)" href="${leadUrl}">Need the exact number? Request a CMA →</a>
+  <footer>Model-derived adjustment rates — not an appraisal. Utah is a non-disclosure state; sold data from MLS records available to licensed agents.<br><br>
+  <b>${CONFIG.agentName} — ${CONFIG.agentBrand}</b> · ${CONFIG.brokerage}<br>
+  ${CONFIG.agentPhone} · ${CONFIG.agentEmail} · Equal Housing Opportunity</footer>
+  </div></body></html>`;
+}
+
+// ============================================================
+// v26 — TOWNHOME/CONDO MODEL + shared solver
+// ============================================================
+// Generic least-squares: rows = [{y, x:[...n]}] → {beta, r2, medErr} or null.
+function regress_(rows, n) {
+  const XtX = [], Xty = [];
+  for (let a = 0; a < n; a++) {
+    Xty[a] = rows.reduce((s2, r) => s2 + r.x[a] * r.y, 0);
+    XtX[a] = [];
+    for (let c = 0; c < n; c++) XtX[a][c] = rows.reduce((s2, r) => s2 + r.x[a] * r.x[c], 0);
+  }
+  const A = XtX.map((row, i) => row.concat([Xty[i]]));
+  for (let c = 0; c < n; c++) {
+    let p = c;
+    for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
+    const tmp = A[c]; A[c] = A[p]; A[p] = tmp;
+    for (let r = 0; r < n; r++) {
+      if (r !== c && A[c][c]) {
+        const f = A[r][c] / A[c][c];
+        for (let k = 0; k <= n; k++) A[r][k] -= f * A[c][k];
+      }
+    }
+  }
+  const beta = A.map((row, i) => row[n] / row[i]);
+  if (beta.some(v => !isFinite(v))) return null;
+  const preds = rows.map(r => r.x.reduce((s2, x, i) => s2 + x * beta[i], 0));
+  const errs = rows.map((r, i) => Math.abs(r.y - preds[i]) / r.y * 100).sort((a2, b2) => a2 - b2);
+  const ybar = rows.reduce((s2, r) => s2 + r.y, 0) / rows.length;
+  const ssRes = rows.reduce((s2, r, i) => s2 + Math.pow(r.y - preds[i], 2), 0);
+  const ssTot = rows.reduce((s2, r) => s2 + Math.pow(r.y - ybar, 2), 0);
+  return { beta, r2: 1 - ssRes / ssTot, medErr: errs[Math.floor(errs.length / 2)] };
+}
+
+// Resale town/condo fit. No acres/walkout — TH lots are uniform.
+function cmaTHModel_(solds) {
+  const yNow = new Date().getFullYear();
+  const data = solds.filter(r =>
+    r.yb && r.yb < CONFIG.newConYear && r.isTH && r.ag && r.ag >= 400 && r.sp <= 1500000);
+  if (data.length < 60) return { ok: false, n: data.length };
+  const rows = data.map(r => ({
+    y: r.sp,
+    x: [1, r.ag, r.bs * (r.bf || 0) / 100, r.bs * (1 - (r.bf || 0) / 100),
+        r.gar || 0, yNow - r.yb, r.fb || 0, r.tq || 0, r.hb || 0, r.bd || 0]
+  }));
+  const f = regress_(rows, 10);
+  if (!f) return { ok: false, n: rows.length };
+  const b = f.beta;
+  return { ok: true, n: rows.length, r2: f.r2, medErr: f.medErr,
+    base: b[0], ag: b[1], fin: b[2], unf: b[3], gar: b[4], age: b[5],
+    fb: b[6], tq: b[7], hb: b[8], bd: b[9] };
+}
+
+function cmaRowsTH_(m) {
+  const $K = v => (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString();
+  return [
+    ['Above-grade sqft', '$' + Math.round(m.ag) + '/sqft', '🟢'],
+    ['Finished basement sqft', '$' + Math.round(m.fin) + '/sqft', '🟡 many TH have no basement — thin signal'],
+    ['Unfinished basement sqft', '$' + Math.round(m.unf) + '/sqft', '🟡'],
+    ['Garage capacity', $K(m.gar) + ' per bay', '🟢 garages matter in TH — often the differentiator'],
+    ['Year built', $K(m.age) + ' per year of age', '🟡 use for ±10-yr gaps'],
+    ['Full baths', $K(m.fb), '🟡'],
+    ['¾ baths', $K(m.tq), '🟡'],
+    ['½ baths', $K(m.hb), '🟡'],
+    ['Bedrooms', $K(m.bd), '🟡 verify against sqft before adjusting'],
+    ['Acres / walkout', '—', 'not modeled — townhome lots are uniform']
+  ];
 }
