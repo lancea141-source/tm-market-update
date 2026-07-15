@@ -1,8 +1,90 @@
 /**
  * MARKET UPDATE PIPELINE — Lance the Realtor (multi-location)
- * VERSION 23
+ * VERSION — see const VERSION below (the banner is not the source of truth)
  * ------------------------------------------------
  * CHANGELOG
+ *  v34 FIX: buildCompareData_() was pulling finished/unfinished basement
+ *      rates straight from the noisy 12-predictor CMA model (cm.fin/cm.unf)
+ *      instead of preferring the stable 5-predictor Pricing Model
+ *      (pm.fin/pm.unf) the way cmaRows_() already does for the real
+ *      per-market CMA page. Result: the compare tool and compare script
+ *      were showing basement numbers that didn't match each market's own
+ *      published page (e.g. TM showed $71/$1 instead of the real $124/$99).
+ *      Now uses the same pm-preferred logic everywhere.
+ *  v33 CROSS-MARKET COMPARE SCRIPT GENERATOR. New 🆚 Generate Compare
+ *      Script (menu + Run tab, works from any one location's sheet):
+ *      server-side fetches every published market's data.json (no browser
+ *      needed, works from your phone), then computes and writes structured
+ *      findings to a new "🆚 Compare Script" tab — $/sqft / price / DOM /
+ *      Index rankings, automatic price-vs-$/sqft "paradox" detection with
+ *      the implied-size math spelled out (the TM-vs-Lehi kind of insight),
+ *      and a side-by-side CMA rate comparison (bath/garage/acre value by
+ *      market). Same philosophy as the existing video Script tab: computes
+ *      the raw findings, you write the narration in your own voice.
+ *      NOTE: the market list (COMPARE_LOCATIONS) must be kept in sync with
+ *      the LOCATIONS array inside buildCompareHtml_() — add new markets to
+ *      both when you set them up (e.g. Saratoga Springs, EM Ranches).
+ *  v32 BATH COLLINEARITY DIAGNOSTIC + CROSS-MARKET COMPARE TOOL.
+ *      · cmaModel_/cmaTHModel_ now compute bathSizeCorr / bathGarCorr —
+ *        the correlation between bathScore and (sqft, garage) in that
+ *        market's own sample. Full baths row on 📐 CMA Adjustments and
+ *        cma-rates/ now shows the actual r value and flags 🟡 if bath
+ *        count is highly correlated with size/garage (data can't cleanly
+ *        separate "more baths" from "bigger house" in that market — the
+ *        $ rate is likely inflated) vs 🟢 if it's reasonably independent
+ *        (the rate is probably trustworthy). Lets the data say so instead
+ *        of eyeballing cross-market comparisons every time.
+ *      · publishToGitHub() now also pushes a small <location>/data.json
+ *        snapshot (index, MoS, medians, 12-mo trend, full CMA rate table)
+ *        alongside each location's HTML report.
+ *      · New 🆚 Publish Compare Tool: pushes compare/index.html — one
+ *        static branded page that fetches every location's data.json
+ *        client-side and renders market stats + CMA rates + trend
+ *        sparklines side by side. Run from any one location's sheet;
+ *        publishes to the shared repo root, not per-location.
+ *  v31 BATH-SCORE MODEL + #ERROR! FIX.
+ *      · Full/¾/half baths were still unstable under v30's ridge fit
+ *        (sign flips, half worth more than ¾) because the three counts
+ *        aren't independent — they're slices of one "how many bathroom
+ *        fixtures" budget per home, so they fight each other for credit
+ *        no matter how much regularization is applied. cmaModel_ and
+ *        cmaTHModel_ now fit ONE predictor instead: bathScore = fullBaths
+ *        + 0.75×¾baths + 0.5×halfBaths (the same weighting WFRMLS itself
+ *        uses to build "Total Bathrooms"). Full/¾/half $ values are then
+ *        derived as 1.0× / 0.75× / 0.5× that single fitted rate — full >
+ *        ¾ > half is now guaranteed by construction, not by hoping the
+ *        sample cooperates.
+ *      · Fixed VALUE ESTIMATE / ANCHOR ESTIMATE showing #ERROR! — the
+ *        description strings started with '=', so Sheets tried to parse
+ *        them as formulas ('base', 'AG×148' aren't valid syntax). Changed
+ *        the leading '=' to '≈' in buildPricingTab_ and buildCmaTab_.
+ *  v30 RIDGE-REGULARIZED CMA MODEL. cmaModel_() and cmaTHModel_() were
+ *      solving a 12-13 predictor hedonic regression via raw normal
+ *      equations (XtX) with no regularization or standardization. With
+ *      correlated predictors — full/¾/half baths especially, which trade
+ *      off against each other within a home, not just against sqft — this
+ *      is numerically unstable: same code, different sample, wildly
+ *      different (sometimes negative, sometimes inverted-order) individual
+ *      coefficients. New regressRidge_() standardizes predictors, fits a
+ *      small L2-penalized regression, rescales back to $/unit. cmaModel_
+ *      and cmaTHModel_ now call it instead of the raw solve. Old regress_()
+ *      kept for reference, no longer called. pricingModel_ (5-predictor
+ *      anchor model) was already stable and is untouched. Tune RIDGE_K
+ *      near the top of regressRidge_() if a coefficient still looks off.
+ *  v29 LOCATION PICKER — one code file for every market, no code editing.
+ *      📍 Set Location (menu): pick 1-Traverse Mountain / 2-Lehi /
+ *      3-Eagle Mountain / 4-Tooele, or type ANY city name — its GitHub
+ *      page folder is created automatically on first publish. The choice
+ *      is stored in the sheet's Script Properties, so it SURVIVES code
+ *      updates: paste new versions of this same file into every sheet.
+ *      🌐 Publish refuses to run until a location is set (no more
+ *      wrong-market publishes). Check Setup shows set ✓ / DEFAULT ⚠️.
+ *  v28 SCOPE GUARDRAILS. New CONFIG.scopeNote states exactly what the
+ *      market includes (e.g. 'Tooele city only — excludes Erda, Grantsville,
+ *      Stansbury Park'); shown on the ▶ Run tab and in ✅ Check Setup.
+ *      Check Setup now also reports the city mix found in the data AND
+ *      warns if the spreadsheet's NAME doesn't match the configured market
+ *      (catches pasting the wrong config into a sheet before publishing).
  *  v27 VERSION VISIBLE IN THE SHEET. ▶ Run tab title shows the running
  *      version and refreshes on every sheet open (so it always matches
  *      the pasted code). Dashboard subtitle and ✅ Check Setup show it too.
@@ -138,7 +220,7 @@
  * Monthly: re-import fresh exports → buildStats() + generateScript(). Done.
  */
 
-const VERSION = 'v27';
+const VERSION = 'v34';
 
 // Graduated index labels — no hard "seller's/buyer's" flip at one point
 function idxLabel_(i) {
@@ -188,7 +270,10 @@ function onOpen() {
     .addItem('✅ Check Setup', 'checkSetupAlert')
     .addItem('🎬 Generate Video Script', 'generateScript')
     .addItem('🌐 Publish to GitHub', 'publishToGitHubWithAlert')
+    .addItem('🆚 Publish Compare Tool', 'publishCompareToolWithAlert')
+    .addItem('🆚 Generate Compare Script', 'generateCompareScriptWithAlert')
     .addSeparator()
+    .addItem('📍 Set Location (one time per sheet)', 'setLocation')
     .addItem('🔑 Set GitHub Token', 'setGithubToken')
     .addItem('⚙️ Setup Workbook (first time only)', 'setupWorkbook')
     .addItem('🔘 Install Run-Tab Trigger (first time only)', 'installRunTrigger')
@@ -197,7 +282,10 @@ function onOpen() {
   // keep the Run tab's version label in sync with the pasted code
   try {
     const sh = SpreadsheetApp.getActive().getSheetByName('▶ Run');
-    if (sh) sh.getRange('A1').setValue('📊 ' + CONFIG.farmShort + ' MARKET — CONTROL PANEL · ' + VERSION);
+    if (sh) {
+      sh.getRange('A1').setValue('📊 ' + CONFIG.farmShort + ' MARKET — CONTROL PANEL · ' + VERSION);
+      sh.getRange('A2').setValue('📍 ' + CONFIG.farmName + (CONFIG.scopeNote ? ' — ' + CONFIG.scopeNote : '') + ' · tap a checkbox to run · status on the right');
+    }
   } catch (e) {}
 }
 
@@ -259,7 +347,9 @@ const RUN_ACTIONS = [
   ['▶ Build Stats & Dashboard', 'buildStats', 'Absorb 📥 Paste + refresh Stats, Dashboard, Pricing Model'],
   ['✅ Check Setup', 'checkSetup', 'Verify token, lead form, triggers, and data'],
   ['🎬 Generate Video Script', 'generateScript', 'Draft this month\'s video script in the Script tab'],
-  ['🌐 Publish to GitHub', 'publishToGitHub', 'Push the live report to your GitHub Pages URL']
+  ['🌐 Publish to GitHub', 'publishToGitHub', 'Push the live report to your GitHub Pages URL'],
+  ['🆚 Publish Compare Tool', 'publishCompareTool', 'Push the cross-market comparison page (works from any one location\'s sheet)'],
+  ['🆚 Generate Compare Script', 'generateCompareScript', 'Pull every published market\'s data and write cross-market findings to the Compare Script tab']
 ];
 
 function buildRunTab_() {
@@ -271,7 +361,7 @@ function buildRunTab_() {
     .setBackground(b.navy).setFontColor(b.cream).setFontSize(14).setFontWeight('bold')
     .setHorizontalAlignment('center').setVerticalAlignment('middle');
   sh.setRowHeight(1, 40);
-  sh.getRange('A2:D2').merge().setValue('Tap a checkbox to run. Works on phone and desktop. Status appears on the right.')
+  sh.getRange('A2:D2').merge().setValue('📍 ' + CONFIG.farmName + (CONFIG.scopeNote ? ' — ' + CONFIG.scopeNote : '') + ' · tap a checkbox to run · status on the right')
     .setBackground(b.camel).setFontColor(b.navy).setFontStyle('italic').setHorizontalAlignment('center');
   const rows = RUN_ACTIONS.map(a => [false, a[0], a[2], '']);
   sh.getRange(3, 1, rows.length, 4).setValues(rows);
@@ -308,7 +398,7 @@ function onRunEdit(e) {
   const idx = e.range.getRow() - 3;
   if (idx < 0 || idx >= RUN_ACTIONS.length) return;
   e.range.setValue(false);
-  const fns = { buildStats, generateScript, publishToGitHub, checkSetup };
+  const fns = { buildStats, generateScript, publishToGitHub, checkSetup, publishCompareTool, generateCompareScript };
   const status = sh.getRange(e.range.getRow(), 4);
   status.setValue('⏳ Running…');
   SpreadsheetApp.flush();
@@ -328,11 +418,12 @@ function publishToGitHubWithAlert() {
 
 const CONFIG = {
   // == LOCATION SETTINGS - the only lines to edit per location ==
-  farmName: 'Lehi',                     // full name: 'Lehi', 'Eagle Mountain', 'Tooele'
-  farmShort: 'Lehi',                    // short label: 'Lehi', 'EM', 'Tooele' - drives '<X> Market Index' etc.
-  areaLine: 'all of Lehi',              // chart caption: 'all of Lehi'
-  numbersLine: "Here's Lehi in numbers.",         // video intro
-  agentTagline: 'Data-driven real estate in Lehi',
+  farmName: 'Traverse Mountain',        // full name: 'Lehi', 'Eagle Mountain', 'Tooele'
+  farmShort: 'TM',                      // short label: 'Lehi', 'EM', 'Tooele' - drives '<X> Market Index' etc.
+  areaLine: 'all of Traverse Mountain', // chart caption: 'all of Lehi'
+  scopeNote: 'the Traverse Mountain community of Lehi only', // what this market includes/excludes — shown on Run tab + Check Setup
+  numbersLine: "Here's the mountain in numbers.", // video intro: "Here's Lehi in numbers."
+  agentTagline: 'Data-driven real estate in Traverse Mountain',
   // ALSO per location: github.path below ('index.html' TM / 'lehi/index.html' Lehi / ...)
   // =============================================================
   agentName: 'Lance Anderson',
@@ -353,7 +444,7 @@ const CONFIG = {
     owner: 'lancea141-source',
     repo: 'tm-market-update',
     branch: 'main',
-    path: 'lehi/index.html'
+    path: 'index.html'
   }
 };
 
@@ -399,11 +490,13 @@ function scanAll_() {
       const impV = impIdx > -1 ? row[impIdx] : null;
       const impD = impV instanceof Date ? impV : (impV ? new Date(impV) : null);
       const imp = impD && !isNaN(impD) ? impD : null;
+      const cityIdx = col('City');
+      const city = cityIdx > -1 ? String(row[cityIdx]).trim() : '';
 
       if (mode === 'oldActives') {
         const lp = num_(row[col('List Price')]);
         if (!lp) return;
-        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp });
+        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp, city });
         return;
       }
       // combined block: route each row by its Status
@@ -412,7 +505,7 @@ function scanAll_() {
       if (status === 'ACTIVE') {
         const lp = num_(row[col('List Price')]);
         if (!lp) return;
-        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp });
+        actives.push({ lp, dom: g('DOM'), sqft: g('Total Square Feet'), mls, imp, city });
         return;
       }
       if (status !== 'SOLD') return; // skip UNDER CONTRACT/BACKUP etc.
@@ -440,7 +533,7 @@ function scanAll_() {
         hb: g('Total Half Bathrooms'),
         acres: g('Acres') || 0,
         walk: bTypeIdx > -1 ? /walkout|daylight/i.test(String(row[bTypeIdx] || '')) : false,
-        mls, imp
+        mls, imp, city
       });
     });
   });
@@ -573,6 +666,8 @@ function computeStats_() {
 // price ≈ intercept + rAG·AboveGradeSqFt + rFin·FinishedBsmtSqFt + rUnf·UnfinishedBsmtSqFt
 //         + rAcre·Acres + walkoutPremium
 // Fit on resale SFH ≤ $1.5M with per-level sqft (needs the new combined export).
+// Stable 5-predictor model — left untouched by the ridge-fix patch (already
+// clean: R² ~0.76-0.87, no collinearity problems observed).
 function pricingModel_(solds) {
   const data = solds.filter(r =>
     r.yb && r.yb < CONFIG.newConYear && !r.isTH && r.ag && r.ag >= 400 &&
@@ -642,7 +737,7 @@ function buildPricingTab_(m) {
     ['Base (intercept)', '$' + Math.round(m.intercept).toLocaleString(), ''],
     ['', '', ''],
     ['CMA USAGE', 'Adjust comps: (sqft difference) × component rate. Walkout premium applies once.', ''],
-    ['VALUE ESTIMATE', '= base + AG×' + Math.round(m.ag) + ' + finBsmt×' + Math.round(m.fin) +
+    ['VALUE ESTIMATE', '≈ base + AG×' + Math.round(m.ag) + ' + finBsmt×' + Math.round(m.fin) +
       ' + unfBsmt×' + Math.round(m.unf) + ' + acres×' + Math.round(m.acre) +
       ' (+' + Math.round(m.walk).toLocaleString() + ' if walkout)', '± ' + m.medErr.toFixed(0) + '%']
   ];
@@ -1165,6 +1260,9 @@ function publishToGitHub() {
   const token = (PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN') || '').trim();
   if (!token) throw new Error('Add GITHUB_TOKEN in Project Settings → Script Properties (see setup notes above publishToGitHub).');
   if (g.owner === 'YOUR_GITHUB_USERNAME') throw new Error('Fill in CONFIG.github.owner with your GitHub username.');
+  if (!PropertiesService.getScriptProperties().getProperty('LOCATION')) {
+    throw new Error('Run 📍 Set Location (menu) first — this sheet doesn\'t know which market it publishes.');
+  }
 
   const s = computeStats_();
   ghPut_(g, token, g.path, buildHtml_(s),
@@ -1173,9 +1271,336 @@ function publishToGitHub() {
     ghPut_(g, token, g.path.replace(/index\.html$/, 'cma-rates/index.html'), buildCmaHtml_(s),
       CONFIG.farmShort + ' CMA adjustment table ' + s.updated + ' (' + VERSION + ')');
   }
+  // v32: small JSON snapshot alongside the HTML, so the cross-market
+  // compare tool can pull this location's numbers without scraping HTML.
+  ghPut_(g, token, g.path.replace(/index\.html$/, 'data.json'), JSON.stringify(buildCompareData_(s)),
+    CONFIG.farmShort + ' data snapshot ' + s.updated + ' (' + VERSION + ')');
   const live = `https://${g.owner}.github.io/${g.repo}/${g.path.replace(/index\.html$/, '')}`;
-  Logger.log('✅ Published: ' + live + (s.cm && s.cm.ok ? ' (+ cma-rates/)' : ''));
+  Logger.log('✅ Published: ' + live + (s.cm && s.cm.ok ? ' (+ cma-rates/)' : '') + ' (+ data.json)');
   return live;
+}
+
+// v32 — curated snapshot for the cross-market compare tool. Keep this
+// small and stable: the compare page's JS reads these exact field names.
+function buildCompareData_(s) {
+  return {
+    farmName: CONFIG.farmName,
+    farmShort: CONFIG.farmShort,
+    updated: s.updated,
+    index: s.index,
+    moi: s.moi,
+    moiRating: s.moiRating,
+    medPrice3: s.medPrice3,
+    medPpsf3: s.medPpsf3,
+    medDom3: s.medDom3,
+    stl3: s.stl3,
+    sales3: s.sales3,
+    sales12: s.sales12,
+    trend: s.trend,
+    cm: (s.cm && s.cm.ok) ? {
+      n: s.cm.n, r2: s.cm.r2, medErr: s.cm.medErr,
+      l1: s.cm.l1, up: s.cm.up,
+      // v34: prefer the stable 5-predictor Pricing Model's basement rates,
+      // same as cmaRows_() does for the actual per-market CMA page — the
+      // CMA model's own fin/unf are noisier and shouldn't be shown instead.
+      fin: (s.pm && s.pm.ok) ? s.pm.fin : s.cm.fin,
+      unf: (s.pm && s.pm.ok) ? s.pm.unf : s.cm.unf,
+      walk: s.cm.walk, gar: s.cm.gar, acre: s.cm.acre, age: s.cm.age,
+      fb: s.cm.fb, tq: s.cm.tq, hb: s.cm.hb,
+      bathSizeCorr: s.cm.bathSizeCorr, bathGarCorr: s.cm.bathGarCorr
+    } : null,
+    pm: (s.pm && s.pm.ok) ? {
+      ag: s.pm.ag, intercept: s.pm.intercept, r2: s.pm.r2, medErr: s.pm.medErr
+    } : null
+  };
+}
+
+// v32 — one-time (or whenever you want to change the page's design / add a
+// market) push of the static cross-market comparison page. Data updates
+// automatically every time any location runs 🌐 Publish (via data.json) —
+// you only need to re-run this if you edit the LOCATIONS list below or the
+// page's HTML/CSS.
+function publishCompareTool() {
+  const g = CONFIG.github;
+  const token = (PropertiesService.getScriptProperties().getProperty('GITHUB_TOKEN') || '').trim();
+  if (!token) throw new Error('Add GITHUB_TOKEN in Project Settings → Script Properties first.');
+  ghPut_(g, token, 'compare/index.html', buildCompareHtml_(),
+    'Cross-market compare tool (' + VERSION + ')');
+  const live = `https://${g.owner}.github.io/${g.repo}/compare/`;
+  Logger.log('✅ Compare tool published: ' + live);
+  return live;
+}
+function publishCompareToolWithAlert() {
+  const url = publishCompareTool();
+  SpreadsheetApp.getUi().alert('Compare tool published!\n' + url +
+    '\n\nTo add a new market later (e.g. Saratoga Springs), edit the LOCATIONS array ' +
+    'inside buildCompareHtml_() in the script and run this again.');
+}
+
+// ============================================================
+// v33 — 🆚 COMPARE SCRIPT GENERATOR
+// ============================================================
+// Keep this list in sync with the LOCATIONS array inside buildCompareHtml_()
+// — add new markets to both when you set them up.
+const COMPARE_LOCATIONS = [
+  { path: '', label: 'Traverse Mountain' },
+  { path: 'lehi/', label: 'Lehi' },
+  { path: 'eagle-mountain/', label: 'Eagle Mountain' },
+  { path: 'tooele/', label: 'Tooele' }
+  // { path: 'saratoga-springs/', label: 'Saratoga Springs' },
+];
+
+// Server-side fetch of every published market's data.json. Works from the
+// Run tab checkbox (mobile), unlike the compare page which needs a browser.
+function fetchCompareData_() {
+  const base = `https://${CONFIG.github.owner}.github.io/${CONFIG.github.repo}/`;
+  const found = [];
+  COMPARE_LOCATIONS.forEach(loc => {
+    try {
+      const res = UrlFetchApp.fetch(base + loc.path + 'data.json', { muteHttpExceptions: true });
+      if (res.getResponseCode() !== 200) return;
+      const data = JSON.parse(res.getContentText());
+      found.push(Object.assign({ label: loc.label }, data));
+    } catch (e) { /* not published yet — skip */ }
+  });
+  return found;
+}
+
+// price = $/sqft × size, so price ÷ $/sqft ≈ the typical home size behind
+// that median — this is what makes the price-vs-$/sqft "paradox" explainable.
+function impliedSize_(d) {
+  return (d.medPrice3 && d.medPpsf3) ? d.medPrice3 / d.medPpsf3 : null;
+}
+
+function generateCompareScript() {
+  const markets = fetchCompareData_();
+  if (markets.length < 2) {
+    throw new Error('Need at least 2 published markets with data.json to compare. ' +
+      'Run 🌐 Publish to GitHub on more locations first.');
+  }
+
+  const rows = [['INSIGHT', 'FINDING', 'SUGGESTED LINE']];
+
+  const byPpsf = markets.filter(m => m.medPpsf3).sort((a, b) => b.medPpsf3 - a.medPpsf3);
+  if (byPpsf.length) {
+    rows.push(['Highest $/sqft', byPpsf[0].label + ' at $' + Math.round(byPpsf[0].medPpsf3) + '/sqft',
+      byPpsf[0].label + ' commands the highest price per square foot in the area right now.']);
+    if (byPpsf.length > 1) rows.push(['Lowest $/sqft',
+      byPpsf[byPpsf.length - 1].label + ' at $' + Math.round(byPpsf[byPpsf.length - 1].medPpsf3) + '/sqft', '']);
+  }
+
+  const byPrice = markets.filter(m => m.medPrice3).sort((a, b) => b.medPrice3 - a.medPrice3);
+  if (byPrice.length) {
+    rows.push(['Highest median price', byPrice[0].label + ' at $' + Math.round(byPrice[0].medPrice3).toLocaleString(), '']);
+    if (byPrice.length > 1) rows.push(['Lowest median price',
+      byPrice[byPrice.length - 1].label + ' at $' + Math.round(byPrice[byPrice.length - 1].medPrice3).toLocaleString(), '']);
+  }
+
+  rows.push(['', '', '']);
+  rows.push(['PRICE vs $/SQFT MISMATCHES', 'Where the $/sqft leader isn\'t the price leader — a real size difference, not noise', '']);
+  let paradoxFound = false;
+  for (let i = 0; i < markets.length; i++) {
+    for (let j = 0; j < markets.length; j++) {
+      if (i === j) continue;
+      const a = markets[i], c = markets[j];
+      if (!a.medPpsf3 || !c.medPpsf3 || !a.medPrice3 || !c.medPrice3) continue;
+      if (a.medPpsf3 > c.medPpsf3 && a.medPrice3 < c.medPrice3) {
+        paradoxFound = true;
+        const sizeA = impliedSize_(a), sizeC = impliedSize_(c);
+        rows.push([
+          a.label + ' vs ' + c.label,
+          a.label + ' is $' + Math.round(a.medPpsf3 - c.medPpsf3) + '/sqft pricier but $' +
+            Math.round(c.medPrice3 - a.medPrice3).toLocaleString() + ' lower in raw median price — implied typical size ' +
+            Math.round(sizeA).toLocaleString() + ' sqft vs ' + Math.round(sizeC).toLocaleString() + ' sqft',
+          a.label + ' costs more per square foot than ' + c.label + ', but ' + c.label + '\'s homes run bigger, ' +
+            'so the raw price still comes out higher there.'
+        ]);
+      }
+    }
+  }
+  if (!paradoxFound) rows.push(['(none found)', 'Price and $/sqft rankings agree across all markets this month', '']);
+
+  rows.push(['', '', '']);
+  const byDom = markets.filter(m => m.medDom3 != null).sort((a, b) => a.medDom3 - b.medDom3);
+  if (byDom.length) {
+    rows.push(['Fastest-moving market', byDom[0].label + ' at ' + byDom[0].medDom3 + ' days on market',
+      byDom[0].label + ' is moving fastest right now — homes are averaging ' + byDom[0].medDom3 + ' days on market.']);
+    if (byDom.length > 1) rows.push(['Slowest-moving market',
+      byDom[byDom.length - 1].label + ' at ' + byDom[byDom.length - 1].medDom3 + ' days', '']);
+  }
+
+  const byIndex = markets.filter(m => m.index != null).sort((a, b) => b.index - a.index);
+  if (byIndex.length) {
+    rows.push(['Hottest market (Index)', byIndex[0].label + ' at ' + byIndex[0].index +
+      ' (' + (byIndex[0].moiRating || '') + ')', '']);
+  }
+
+  rows.push(['', '', '']);
+  rows.push(['CMA RATE COMPARISON', 'What buyers actually pay for each feature, by market', '']);
+  const withCm = markets.filter(m => m.cm);
+  if (withCm.length) {
+    const byBath = withCm.slice().sort((a, b) => b.cm.fb - a.cm.fb);
+    rows.push(['Full bath value', byBath.map(m => m.label + ': $' + Math.round(m.cm.fb).toLocaleString()).join(' · '), '']);
+    const byGar = withCm.slice().sort((a, b) => b.cm.gar - a.cm.gar);
+    rows.push(['Garage bay value', byGar.map(m => m.label + ': $' + Math.round(m.cm.gar).toLocaleString()).join(' · '), '']);
+    const byAcre = withCm.filter(m => m.cm.acre).sort((a, b) => b.cm.acre - a.cm.acre);
+    if (byAcre.length) rows.push(['Acre value', byAcre.map(m => m.label + ': $' + Math.round(m.cm.acre).toLocaleString()).join(' · '), '']);
+    const bySqft = withCm.slice().sort((a, b) => b.cm.l1 - a.cm.l1);
+    rows.push(['Main floor $/sqft value', bySqft.map(m => m.label + ': $' + Math.round(m.cm.l1)).join(' · '), '']);
+  } else {
+    rows.push(['(no CMA data)', 'No market has a big enough resale sample yet for CMA rates', '']);
+  }
+
+  rows.push(['', '', '']);
+  rows.push(['DATA AS OF', markets.map(m => m.label + ': ' + m.updated).join(' · '), '']);
+
+  const ss = SpreadsheetApp.getActive();
+  const b = CONFIG.brand;
+  const sh = ss.getSheetByName('🆚 Compare Script') || ss.insertSheet('🆚 Compare Script');
+  sh.clear();
+  sh.getRange(1, 1, rows.length, 3).setValues(rows);
+  sh.getRange(1, 1, 1, 3).setBackground(b.navy).setFontColor(b.cream).setFontWeight('bold');
+  sh.setColumnWidth(1, 220).setColumnWidth(2, 420).setColumnWidth(3, 380);
+  sh.getRange(1, 1, rows.length, 3).setWrap(true);
+  return 'compared ' + markets.length + ' markets';
+}
+
+function generateCompareScriptWithAlert() {
+  const result = generateCompareScript();
+  SpreadsheetApp.getUi().alert('🆚 Compare script built — ' + result + '. Check the 🆚 Compare Script tab.');
+}
+
+// v32 — standalone static page. NOT location-specific: run this from any
+// one sheet, it publishes to the shared repo root (compare/), not that
+// sheet's own folder. Pure client-side JS — fetches every location's
+// data.json at page-load time, no server involved.
+function buildCompareHtml_() {
+  const b = CONFIG.brand;
+  return `<!DOCTYPE html><html><head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Market Comparison | ${CONFIG.agentName}</title>
+  <style>
+    :root{--terra:${b.terracotta};--olive:${b.olive};--navy:${b.navy};--camel:${b.camel};--cream:${b.cream}}
+    *{box-sizing:border-box;margin:0}
+    body{font-family:Georgia,serif;background:var(--cream);color:var(--navy)}
+    .wrap{max-width:960px;margin:0 auto;padding:20px}
+    header{text-align:center;padding:24px 0;border-bottom:3px solid var(--terra)}
+    header img{max-height:70px}
+    h1{font-size:1.5em;margin-top:10px}
+    .updated{color:var(--olive);font-size:.85em;font-style:italic}
+    .card{background:#fff;border-radius:12px;padding:18px;margin:16px 0;border-top:4px solid var(--navy);overflow-x:auto}
+    .kicker{font-size:.72em;letter-spacing:.13em;color:var(--olive);font-weight:bold;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;font-size:.82em}
+    th{background:var(--olive);color:var(--cream);padding:8px;text-align:left;white-space:nowrap}
+    th.metric{background:var(--navy)}
+    td{padding:7px 8px;border-bottom:1px solid var(--cream);white-space:nowrap}
+    tr:nth-child(even) td{background:rgba(194,161,120,.12)}
+    .metric-label{font-weight:bold;color:var(--navy)}
+    .note{font-size:.72em;color:var(--olive);font-style:italic;margin-bottom:10px}
+    .spark{display:flex;align-items:flex-end;gap:2px;height:32px;min-width:90px}
+    .spark div{flex:1;background:var(--terra);border-radius:1px 1px 0 0;min-height:2px}
+    .loading{padding:30px;text-align:center;color:var(--olive);font-style:italic}
+    footer{text-align:center;font-size:.75em;color:var(--olive);padding:20px 0}
+  </style></head><body><div class="wrap">
+  <header>
+    <img src="https://drive.google.com/uc?id=${CONFIG.logoFileId}" alt="${CONFIG.agentBrand}">
+    <h1>Market Comparison</h1>
+    <div class="updated">Live from each market's latest published data · refreshes on every visit</div>
+    <div class="updated">${CONFIG.agentBrand} · ${CONFIG.brokerage}</div>
+  </header>
+  <div id="content" class="loading">Loading markets…</div>
+  <footer>Utah is a non-disclosure state — this MLS sold data is not publicly available.<br><br>
+  <b>${CONFIG.agentName} — ${CONFIG.agentBrand}</b> · ${CONFIG.brokerage}<br>
+  ${CONFIG.agentPhone} · ${CONFIG.agentEmail} · Equal Housing Opportunity</footer>
+  </div>
+  <script>
+  // Add new markets here once they're set up and published — path must
+  // match that location's CONFIG.github.path folder (e.g. 'lehi/').
+  const LOCATIONS = [
+    { path: '', label: 'Traverse Mountain' },
+    { path: 'lehi/', label: 'Lehi' },
+    { path: 'eagle-mountain/', label: 'Eagle Mountain' },
+    { path: 'tooele/', label: 'Tooele' }
+    // { path: 'saratoga-springs/', label: 'Saratoga Springs' },
+  ];
+
+  function fmtMoney(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString(); }
+  function fmtK(n) { return n == null ? '—' : (n < 0 ? '−$' : '+$') + Math.round(Math.abs(n)).toLocaleString(); }
+  function bathFlag(cm) {
+    if (!cm) return '';
+    const c = Math.max(Math.abs(cm.bathSizeCorr || 0), Math.abs(cm.bathGarCorr || 0));
+    return c > 0.6 ? ' 🟡' : ' 🟢';
+  }
+  function sparkline(trend) {
+    if (!trend || !trend.length) return '<span class="note">no trend data</span>';
+    const vals = trend.map(t => t.n || 0);
+    const max = Math.max.apply(null, vals.concat([1]));
+    return '<div class="spark">' + vals.map(v =>
+      '<div style="height:' + Math.max(Math.round(v / max * 100), 6) + '%" title="' + v + ' sold"></div>'
+    ).join('') + '</div>';
+  }
+
+  const STAT_ROWS = [
+    ['Updated', d => d.updated || '—'],
+    ['Market Index', d => d.index != null ? String(d.index) : '—'],
+    ['Months of Supply', d => d.moi != null ? d.moi.toFixed(1) + ' — ' + (d.moiRating || '') : '—'],
+    ['Median Sold Price (90d)', d => fmtMoney(d.medPrice3)],
+    ['Median $/sqft (90d)', d => d.medPpsf3 ? '$' + Math.round(d.medPpsf3) : '—'],
+    ['Median DOM (90d)', d => d.medDom3 != null ? String(d.medDom3) : '—'],
+    ['Sale-to-List (90d)', d => d.stl3 != null ? d.stl3.toFixed(1) + '%' : '—'],
+    ['Sales — 90d / 12mo', d => (d.sales3 != null ? d.sales3 : '—') + ' / ' + (d.sales12 != null ? d.sales12 : '—')],
+    ['12-mo sold trend', d => sparkline(d.trend)]
+  ];
+  const CMA_ROWS = [
+    ['Main floor sqft', d => d.cm ? '$' + Math.round(d.cm.l1) : '—'],
+    ['Upper floor sqft', d => d.cm ? '$' + Math.round(d.cm.up) : '—'],
+    ['Finished basement sqft', d => d.cm ? '$' + Math.round(d.cm.fin) : '—'],
+    ['Unfinished basement sqft', d => d.cm ? '$' + Math.round(d.cm.unf) : '—'],
+    ['Walkout basement', d => d.cm ? fmtK(d.cm.walk) + ' flat' : '—'],
+    ['Garage (per bay)', d => d.cm ? fmtK(d.cm.gar) : '—'],
+    ['Acre (lot)', d => d.cm ? fmtK(d.cm.acre) : '—'],
+    ['Year built (per yr age)', d => d.cm ? fmtK(d.cm.age) : '—'],
+    ['Full bath', d => d.cm ? fmtK(d.cm.fb) + bathFlag(d.cm) : '—'],
+    ['¾ bath (derived)', d => d.cm ? fmtK(d.cm.tq) : '—'],
+    ['½ bath (derived)', d => d.cm ? fmtK(d.cm.hb) : '—'],
+    ['Model fit', d => d.cm ? 'R² ' + d.cm.r2.toFixed(2) + ' · n=' + d.cm.n : '—']
+  ];
+
+  function buildTable(rows, found) {
+    let html = '<table><tr><th class="metric">Metric</th>' +
+      found.map(d => '<th>' + d.label + '</th>').join('') + '</tr>';
+    rows.forEach(function(row) {
+      html += '<tr><td class="metric-label">' + row[0] + '</td>' +
+        found.map(d => '<td>' + row[1](d) + '</td>').join('') + '</tr>';
+    });
+    return html + '</table>';
+  }
+
+  async function loadAll() {
+    const all = await Promise.all(LOCATIONS.map(async loc => {
+      try {
+        const res = await fetch('../' + loc.path + 'data.json', { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return Object.assign({ label: loc.label }, data);
+      } catch (e) { return null; }
+    }));
+    const found = all.filter(Boolean);
+    const missing = LOCATIONS.filter((loc, i) => !all[i]).map(l => l.label);
+    const el = document.getElementById('content');
+    if (!found.length) {
+      el.innerHTML = '<div class="loading">No market data found yet — run 🌐 Publish to GitHub on at least one location first.</div>';
+      return;
+    }
+    let html = '';
+    if (missing.length) html += '<div class="note">Not yet published: ' + missing.join(', ') + '</div>';
+    html += '<div class="card"><div class="kicker">MARKET STATS</div>' + buildTable(STAT_ROWS, found) + '</div>';
+    html += '<div class="card"><div class="kicker">CMA ADJUSTMENT RATES (resale single-family) · 🟡 = bath rate correlates with sqft/garage, treat as upper bound</div>' + buildTable(CMA_ROWS, found) + '</div>';
+    el.innerHTML = html;
+  }
+  loadAll();
+  </script>
+  </body></html>`;
 }
 
 // Create-or-update one file in the repo.
@@ -1352,9 +1777,13 @@ function checkSetup() {
   const token = (p.getProperty('GITHUB_TOKEN') || '').trim();
   const form = p.getProperty('LEAD_FORM_URL') || '';
   const trig = ScriptApp.getProjectTriggers().map(t => t.getHandlerFunction());
-  let dataLine;
+  let dataLine, citiesLine = '';
   try {
     const d = scanAll_();
+    const mix = {};
+    d.solds.forEach(r => { const c = r.city || '?'; mix[c] = (mix[c] || 0) + 1; });
+    citiesLine = Object.keys(mix).sort((a, b) => mix[b] - mix[a]).slice(0, 3)
+      .map(c => c + ' ' + Math.round(mix[c] / d.solds.length * 100) + '%').join(' · ');
     const newest = d.solds.reduce((m, r) => r.date && (!m || r.date > m) ? r.date : m, null);
     dataLine = d.solds.length + ' solds (newest ' +
       (newest ? Utilities.formatDate(newest, Session.getScriptTimeZone(), 'MMM d, yyyy') : '—') +
@@ -1362,14 +1791,22 @@ function checkSetup() {
   } catch (e) { dataLine = '✗ ' + e.message; }
   const lines = [
     'Pipeline: ' + VERSION,
-    'Location: ' + CONFIG.farmName + ' → https://' + CONFIG.github.owner + '.github.io/' +
+    'Location: ' + CONFIG.farmName + (p.getProperty('LOCATION') ? ' (set ✓)' : ' (⚠️ DEFAULT — run 📍 Set Location)') + ' → https://' + CONFIG.github.owner + '.github.io/' +
       CONFIG.github.repo + '/' + CONFIG.github.path.replace(/index\.html$/, ''),
+    'Scope: ' + (CONFIG.scopeNote || '—'),
     'GitHub token: ' + (token ? '✓ saved (…' + token.slice(-4) + ')' : '✗ MISSING — run 🔑 Set GitHub Token'),
     'Lead form: ' + (form ? '✓ live' : '✗ not created — run 📝 Setup Lead Form'),
     'Run-tab trigger: ' + (trig.indexOf('onRunEdit') > -1 ? '✓ installed' : '✗ MISSING — run 🔘 Install Run-Tab Trigger'),
     'Lead-alert trigger: ' + (trig.indexOf('onLeadSubmit') > -1 ? '✓ installed' : (form ? '✗ MISSING — rerun 📝 Setup Lead Form' : '— created with lead form')),
     'Data: ' + dataLine
   ];
+  if (citiesLine) lines.push('Data cities: ' + citiesLine);
+  const ssName = SpreadsheetApp.getActive().getName();
+  const nm = ssName.toLowerCase();
+  if (nm.indexOf(CONFIG.farmShort.toLowerCase()) === -1 && nm.indexOf(CONFIG.farmName.toLowerCase()) === -1) {
+    lines.push('⚠️ SHEET NAME MISMATCH: this file is named "' + ssName + '" but the config says ' +
+      CONFIG.farmName + ' — verify before publishing!');
+  }
   return lines.join('\n');
 }
 function checkSetupAlert() {
@@ -1377,32 +1814,46 @@ function checkSetupAlert() {
 }
 
 // ============================================================
-// v25 — 📐 CMA ADJUSTMENT ENGINE
+// v30 — RIDGE-REGULARIZED SOLVER
 // ============================================================
-// Full hedonic model:
-// price ≈ base + rL1·MainSqFt + rUp·UpperSqFt + rFin·FinBsmt + rUnf·UnfBsmt
-//        + rAcre·Acres + walkout + rGar·GarageBays + rAge·Age
-//        + rFB·FullBaths + rTQ·¾Baths + rHB·½Baths + rBd·Bedrooms
-function cmaModel_(solds) {
-  const yNow = new Date().getFullYear();
-  const data = solds.filter(r =>
-    r.yb && r.yb < CONFIG.newConYear && !r.isTH && r.l1 && r.l1 >= 300 &&
-    r.bf != null && r.sp <= 1500000);
-  if (data.length < 60) return { ok: false, n: data.length };
-  const rows = data.map(r => ({
-    y: r.sp,
-    x: [1, r.l1, r.up || 0, r.bs * r.bf / 100, r.bs * (1 - r.bf / 100),
-        r.acres || 0, r.walk ? 1 : 0, r.gar || 0, yNow - r.yb,
-        r.fb || 0, r.tq || 0, r.hb || 0, r.bd || 0]
-  }));
-  const n = 13;
-  const XtX = [], Xty = [];
-  for (let a = 0; a < n; a++) {
-    Xty[a] = rows.reduce((s2, r) => s2 + r.x[a] * r.y, 0);
-    XtX[a] = [];
-    for (let c = 0; c < n; c++) XtX[a][c] = rows.reduce((s2, r) => s2 + r.x[a] * r.x[c], 0);
+// Standardizes predictors, fits a small L2-penalized (ridge) least-squares
+// regression, then rescales coefficients back to $/unit. This replaces the
+// raw normal-equation solve for the CMA models (12-13 correlated predictors),
+// which was numerically unstable — see v30 changelog entry above.
+// Tune RIDGE_K: raise it if a coefficient (e.g. full bath) still looks
+// implausible; lower it if the whole adjustment table starts looking
+// suspiciously flat / shrunk toward $0.
+const RIDGE_K = 0.02;
+
+function regressRidge_(rows, n) {
+  const m = rows.length;
+  const means = [], sds = [];
+  for (let j = 1; j < n; j++) {
+    const col = rows.map(r => r.x[j]);
+    const mean = col.reduce((s, v) => s + v, 0) / m;
+    const sd = Math.sqrt(col.reduce((s, v) => s + (v - mean) * (v - mean), 0) / m) || 1;
+    means[j] = mean; sds[j] = sd;
   }
-  const A = XtX.map((row, i) => row.concat([Xty[i]]));
+  const ybar = rows.reduce((s, r) => s + r.y, 0) / m;
+
+  const Z = rows.map(r => {
+    const z = [1];
+    for (let j = 1; j < n; j++) z.push((r.x[j] - means[j]) / sds[j]);
+    return z;
+  });
+  const yC = rows.map(r => r.y - ybar);
+
+  const ZtZ = [], Zty = [];
+  for (let a = 0; a < n; a++) {
+    Zty[a] = Z.reduce((s, z, i) => s + z[a] * yC[i], 0);
+    ZtZ[a] = [];
+    for (let c = 0; c < n; c++) {
+      let v = Z.reduce((s, z) => s + z[a] * z[c], 0);
+      if (a === c && a > 0) v += RIDGE_K * m; // ridge penalty, skip intercept row/col
+      ZtZ[a][c] = v;
+    }
+  }
+  const A = ZtZ.map((row, i) => row.concat([Zty[i]]));
   for (let c = 0; c < n; c++) {
     let p = c;
     for (let r = c + 1; r < n; r++) if (Math.abs(A[r][c]) > Math.abs(A[p][c])) p = r;
@@ -1414,27 +1865,103 @@ function cmaModel_(solds) {
       }
     }
   }
-  const beta = A.map((row, i) => row[n] / row[i]);
-  if (beta.some(v => !isFinite(v))) return { ok: false, n: rows.length };
-  const preds = rows.map(r => r.x.reduce((s2, x, i) => s2 + x * beta[i], 0));
-  const errs = rows.map((r, i) => Math.abs(r.y - preds[i]) / r.y * 100).sort((a2, b2) => a2 - b2);
-  const ybar = rows.reduce((s2, r) => s2 + r.y, 0) / rows.length;
-  const ssRes = rows.reduce((s2, r, i) => s2 + Math.pow(r.y - preds[i], 2), 0);
-  const ssTot = rows.reduce((s2, r) => s2 + Math.pow(r.y - ybar, 2), 0);
+  const betaZ = A.map((row, i) => row[n] / row[i]);
+  if (betaZ.some(v => !isFinite(v))) return null;
+
+  // rescale standardized coefficients back to original $/unit terms
+  const beta = [0];
+  for (let j = 1; j < n; j++) beta[j] = betaZ[j] / sds[j];
+  beta[0] = ybar - beta.slice(1).reduce((s, bb, i) => s + bb * means[i + 1], 0);
+
+  const preds = rows.map(r => r.x.reduce((s, x, i) => s + x * beta[i], 0));
+  const errs = rows.map((r, i) => Math.abs(r.y - preds[i]) / r.y * 100).sort((a, b) => a - b);
+  const ssRes = rows.reduce((s, r, i) => s + Math.pow(r.y - preds[i], 2), 0);
+  const ssTot = rows.reduce((s, r) => s + Math.pow(r.y - ybar, 2), 0);
+  return { beta, r2: 1 - ssRes / ssTot, medErr: errs[Math.floor(errs.length / 2)] };
+}
+
+// Pearson correlation — used (v32) to check whether bathScore is really
+// independent signal or just riding along with sqft/garage in a given
+// market's sample.
+function corr_(xs, ys) {
+  const n = xs.length;
+  if (n < 2) return 0;
+  const mx = xs.reduce((s, v) => s + v, 0) / n;
+  const my = ys.reduce((s, v) => s + v, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) {
+    const dx = xs[i] - mx, dy = ys[i] - my;
+    sxy += dx * dy; sxx += dx * dx; syy += dy * dy;
+  }
+  const denom = Math.sqrt(sxx * syy);
+  return denom ? sxy / denom : 0;
+}
+
+// ============================================================
+// v25 — 📐 CMA ADJUSTMENT ENGINE
+// ============================================================
+// Full hedonic model:
+// price ≈ base + rL1·MainSqFt + rUp·UpperSqFt + rFin·FinBsmt + rUnf·UnfBsmt
+//        + rAcre·Acres + walkout + rGar·GarageBays + rAge·Age
+//        + rBath·BathScore + rBd·Bedrooms
+// where BathScore = FullBaths + 0.75×¾Baths + 0.5×HalfBaths (v31 — see
+// changelog: fitting full/¾/half separately was unstable since they're not
+// independent, they're slices of one bathroom-fixture budget per home).
+// Uses regressRidge_() (v30) instead of a raw normal-equation solve —
+// correlated predictors on a few hundred rows is exactly the situation
+// where unregularized OLS produces unstable individual coefficients.
+function cmaModel_(solds) {
+  const yNow = new Date().getFullYear();
+  const data = solds.filter(r =>
+    r.yb && r.yb < CONFIG.newConYear && !r.isTH && r.l1 && r.l1 >= 300 &&
+    r.bf != null && r.sp <= 1500000);
+  if (data.length < 60) return { ok: false, n: data.length };
+  const rows = data.map(r => ({
+    y: r.sp,
+    x: [1, r.l1, r.up || 0, r.bs * r.bf / 100, r.bs * (1 - r.bf / 100),
+        r.acres || 0, r.walk ? 1 : 0, r.gar || 0, yNow - r.yb,
+        (r.fb || 0) + 0.75 * (r.tq || 0) + 0.5 * (r.hb || 0), r.bd || 0]
+  }));
+  const f = regressRidge_(rows, 11);
+  if (!f) return { ok: false, n: rows.length };
+  const beta = f.beta;
+  const bathRate = beta[9];
+  // v32: does bath count actually carry independent signal here, or is it
+  // riding along with sqft/garage in this market's sample?
+  const bathVals = data.map(r => (r.fb || 0) + 0.75 * (r.tq || 0) + 0.5 * (r.hb || 0));
+  const sizeVals = data.map(r => r.l1 + (r.up || 0));
+  const garVals = data.map(r => r.gar || 0);
+  const bathSizeCorr = corr_(bathVals, sizeVals);
+  const bathGarCorr = corr_(bathVals, garVals);
   return {
-    ok: true, n: rows.length, r2: 1 - ssRes / ssTot, medErr: errs[Math.floor(errs.length / 2)],
+    ok: true, n: rows.length, r2: f.r2, medErr: f.medErr,
     base: beta[0], l1: beta[1], up: beta[2], fin: beta[3], unf: beta[4],
     acre: beta[5], walk: beta[6], gar: beta[7], age: beta[8],
-    fb: beta[9], tq: beta[10], hb: beta[11], bd: beta[12]
+    bathRate: bathRate, fb: bathRate, tq: bathRate * 0.75, hb: bathRate * 0.5,
+    bd: beta[10], bathSizeCorr: bathSizeCorr, bathGarCorr: bathGarCorr
   };
 }
 
 // Shared row data for the tab + public page. Basement rates come from the
 // stable 5-component model when available.
+// v32: turns bathSizeCorr/bathGarCorr into a plain-English confidence note.
+// >0.6 = bath count is mostly explained by sqft/garage in this market's
+// sample — the data can't cleanly separate "more baths" from "bigger
+// house," so treat the $ rate as an upper bound, not gospel.
+function bathConfidence_(cm) {
+  const sc = cm.bathSizeCorr || 0, gc = cm.bathGarCorr || 0;
+  const maxCorr = Math.max(Math.abs(sc), Math.abs(gc));
+  const rTxt = 'r=' + maxCorr.toFixed(2) + ' vs sqft/garage';
+  if (maxCorr > 0.6) return { flag: '🟡', note: rTxt + ' — highly correlated with size; this rate is likely inflated, verify against real comps before using' };
+  if (maxCorr > 0.4) return { flag: '🟡', note: rTxt + ' — some overlap with size; use with a bit of caution' };
+  return { flag: '🟢', note: rTxt + ' — reasonably independent of size/garage, trustworthy' };
+}
+
 function cmaRows_(cm, pm) {
   const $K = v => (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString();
   const fin = pm && pm.ok ? pm.fin : cm.fin;
   const unf = pm && pm.ok ? pm.unf : cm.unf;
+  const bc = bathConfidence_(cm);
   return [
     ['L1 (main floor) sqft', '$' + Math.round(cm.l1) + '/sqft', '🟢 main-level space typically worth ~2× upper (rambler premium)'],
     ['L2/L3/L4 (upper) sqft', '$' + Math.round(cm.up) + '/sqft', '🟢'],
@@ -1444,9 +1971,9 @@ function cmaRows_(cm, pm) {
     ['Garage capacity', $K(cm.gar) + ' per bay', '🟢'],
     ['Acres (lot)', $K(cm.acre) + ' per acre', '🟢'],
     ['Year built', $K(cm.age) + ' per year of age', '🟡 use for ±10-yr gaps, not 30'],
-    ['Full baths', $K(cm.fb), '🟡'],
-    ['¾ baths', $K(cm.tq), '🟡 small sample'],
-    ['½ baths', $K(cm.hb), "🔴 noise — don't adjust"],
+    ['Full baths', $K(cm.fb), bc.flag + ' ' + bc.note],
+    ['¾ baths', $K(cm.tq), bc.flag + ' = 0.75 × full-bath rate (derived, same confidence as above)'],
+    ['½ baths', $K(cm.hb), bc.flag + ' = 0.50 × full-bath rate (derived, same confidence as above)'],
     ['Bedrooms', '$0', '🔴 do NOT adjust — beds are priced inside sqft; more beds at same sqft = chopped-up floor plan'],
     ['Carport capacity', '—', 'not in export'],
     ['Total SqFt / GL Area / $ per sold sqft', '—', 'computed outputs, not adjustments']
@@ -1471,7 +1998,7 @@ function buildCmaTab_(cm, pm, cmTH) {
   rows.push(['MODEL', 'R² ' + cm.r2.toFixed(3) + ' · median error ±' + cm.medErr.toFixed(1) + '%',
     cm.n + ' resale SFH sales']);
   if (pm && pm.ok) rows.push(['ANCHOR ESTIMATE',
-    '= $' + Math.round(pm.intercept).toLocaleString() + ' + AG×$' + Math.round(pm.ag) +
+    '≈ $' + Math.round(pm.intercept).toLocaleString() + ' + AG×$' + Math.round(pm.ag) +
     ' + finBsmt×$' + Math.round(pm.fin) + ' + unfBsmt×$' + Math.round(pm.unf) +
     ' + acres×$' + Math.round(pm.acre).toLocaleString() +
     ' (+$' + Math.round(pm.walk).toLocaleString() + ' walkout)', '±' + pm.medErr.toFixed(0) + '%']);
@@ -1556,6 +2083,9 @@ function buildCmaHtml_(s) {
 // v26 — TOWNHOME/CONDO MODEL + shared solver
 // ============================================================
 // Generic least-squares: rows = [{y, x:[...n]}] → {beta, r2, medErr} or null.
+// (Kept for reference only as of v30 — cmaModel_ and cmaTHModel_ now use
+// regressRidge_() above instead, since this raw-normal-equation version is
+// the one that produced the unstable/negative bath coefficients.)
 function regress_(rows, n) {
   const XtX = [], Xty = [];
   for (let a = 0; a < n; a++) {
@@ -1586,6 +2116,8 @@ function regress_(rows, n) {
 }
 
 // Resale town/condo fit. No acres/walkout — TH lots are uniform.
+// Uses regressRidge_() (v30) — same collinearity risk as cmaModel_, same
+// bathScore fix (v31) applied.
 function cmaTHModel_(solds) {
   const yNow = new Date().getFullYear();
   const data = solds.filter(r =>
@@ -1594,28 +2126,133 @@ function cmaTHModel_(solds) {
   const rows = data.map(r => ({
     y: r.sp,
     x: [1, r.ag, r.bs * (r.bf || 0) / 100, r.bs * (1 - (r.bf || 0) / 100),
-        r.gar || 0, yNow - r.yb, r.fb || 0, r.tq || 0, r.hb || 0, r.bd || 0]
+        r.gar || 0, yNow - r.yb,
+        (r.fb || 0) + 0.75 * (r.tq || 0) + 0.5 * (r.hb || 0), r.bd || 0]
   }));
-  const f = regress_(rows, 10);
+  const f = regressRidge_(rows, 8);
   if (!f) return { ok: false, n: rows.length };
   const b = f.beta;
+  const bathRate = b[6];
+  const bathVals = data.map(r => (r.fb || 0) + 0.75 * (r.tq || 0) + 0.5 * (r.hb || 0));
+  const sizeVals = data.map(r => r.ag);
+  const garVals = data.map(r => r.gar || 0);
+  const bathSizeCorr = corr_(bathVals, sizeVals);
+  const bathGarCorr = corr_(bathVals, garVals);
   return { ok: true, n: rows.length, r2: f.r2, medErr: f.medErr,
     base: b[0], ag: b[1], fin: b[2], unf: b[3], gar: b[4], age: b[5],
-    fb: b[6], tq: b[7], hb: b[8], bd: b[9] };
+    bathRate: bathRate, fb: bathRate, tq: bathRate * 0.75, hb: bathRate * 0.5,
+    bd: b[7], bathSizeCorr: bathSizeCorr, bathGarCorr: bathGarCorr };
 }
 
 function cmaRowsTH_(m) {
   const $K = v => (v < 0 ? '−$' : '+$') + Math.round(Math.abs(v)).toLocaleString();
+  const bc = bathConfidence_(m);
   return [
     ['Above-grade sqft', '$' + Math.round(m.ag) + '/sqft', '🟢'],
     ['Finished basement sqft', '$' + Math.round(m.fin) + '/sqft', '🟡 many TH have no basement — thin signal'],
     ['Unfinished basement sqft', '$' + Math.round(m.unf) + '/sqft', '🟡'],
     ['Garage capacity', $K(m.gar) + ' per bay', '🟢 garages matter in TH — often the differentiator'],
     ['Year built', $K(m.age) + ' per year of age', '🟡 use for ±10-yr gaps'],
-    ['Full baths', $K(m.fb), '🟡'],
-    ['¾ baths', $K(m.tq), '🟡'],
-    ['½ baths', $K(m.hb), '🟡'],
+    ['Full baths', $K(m.fb), bc.flag + ' ' + bc.note],
+    ['¾ baths', $K(m.tq), bc.flag + ' = 0.75 × full-bath rate (derived, same confidence as above)'],
+    ['½ baths', $K(m.hb), bc.flag + ' = 0.50 × full-bath rate (derived, same confidence as above)'],
     ['Bedrooms', $K(m.bd), '🟡 verify against sqft before adjusting'],
     ['Acres / walkout', '—', 'not modeled — townhome lots are uniform']
   ];
+}
+
+// ============================================================
+// v29 — 📍 LOCATION PICKER (stored per sheet, survives code updates)
+// ============================================================
+const LOC_PRESETS = {
+  '1': { farmName: 'Traverse Mountain', farmShort: 'TM',
+    areaLine: 'all of Traverse Mountain',
+    scopeNote: 'the Traverse Mountain community of Lehi only',
+    numbersLine: "Here's the mountain in numbers.",
+    agentTagline: 'Data-driven real estate in Traverse Mountain',
+    path: 'index.html' },
+  '2': { farmName: 'Lehi', farmShort: 'Lehi',
+    areaLine: 'all of Lehi',
+    scopeNote: 'all of Lehi city limits — includes Traverse Mountain',
+    numbersLine: "Here's Lehi in numbers.",
+    agentTagline: 'Data-driven real estate in Lehi',
+    path: 'lehi/index.html' },
+  '3': { farmName: 'Eagle Mountain', farmShort: 'EM',
+    areaLine: 'all of Eagle Mountain',
+    scopeNote: 'Eagle Mountain city limits',
+    numbersLine: "Here's Eagle Mountain in numbers.",
+    agentTagline: 'Data-driven real estate in Eagle Mountain',
+    path: 'eagle-mountain/index.html' },
+  '4': { farmName: 'Tooele', farmShort: 'Tooele',
+    areaLine: 'all of Tooele',
+    scopeNote: 'Tooele city only — excludes Erda, Grantsville, Stansbury Park',
+    numbersLine: "Here's Tooele in numbers.",
+    agentTagline: 'Data-driven real estate in Tooele',
+    path: 'tooele/index.html' }
+};
+
+// Overwrites CONFIG's location fields from the stored choice (if any).
+function applyLocation_() {
+  try {
+    const raw = PropertiesService.getScriptProperties().getProperty('LOCATION');
+    if (!raw) return;
+    const L = JSON.parse(raw);
+    CONFIG.farmName = L.farmName; CONFIG.farmShort = L.farmShort;
+    CONFIG.areaLine = L.areaLine; CONFIG.scopeNote = L.scopeNote;
+    CONFIG.numbersLine = L.numbersLine; CONFIG.agentTagline = L.agentTagline;
+    CONFIG.github.path = L.path;
+  } catch (e) { Logger.log('applyLocation: ' + e); }
+}
+applyLocation_();
+
+// 📍 One-time per sheet: choose the market this sheet publishes.
+function setLocation() {
+  const ui = SpreadsheetApp.getUi();
+  const r = ui.prompt('📍 Set Location for THIS sheet',
+    'Type a number or a city name:\n\n' +
+    '1 — Traverse Mountain (publishes to the main page)\n' +
+    '2 — Lehi\n' +
+    '3 — Eagle Mountain\n' +
+    '4 — Tooele\n\n' +
+    'Or type any other area name (e.g. Grantsville) — its page folder is created automatically on first publish.',
+    ui.ButtonSet.OK_CANCEL);
+  if (r.getSelectedButton() !== ui.Button.OK) return;
+  const t = r.getResponseText().trim();
+  if (!t) { ui.alert('Nothing chosen.'); return; }
+  let L = LOC_PRESETS[t];
+  if (!L) {
+    const keys = Object.keys(LOC_PRESETS);
+    for (let i = 0; i < keys.length; i++) {
+      const pz = LOC_PRESETS[keys[i]];
+      if (pz.farmName.toLowerCase() === t.toLowerCase() || pz.farmShort.toLowerCase() === t.toLowerCase()) { L = pz; break; }
+    }
+  }
+  if (!L) {
+    const name = t.replace(/\b\w/g, c => c.toUpperCase());
+    const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const s = ui.prompt('📍 Scope for ' + name,
+      'One line: exactly what this market includes/excludes.\n' +
+      'Example: Tooele city only — excludes Erda, Grantsville, Stansbury Park',
+      ui.ButtonSet.OK_CANCEL);
+    L = { farmName: name, farmShort: name,
+      areaLine: 'all of ' + name,
+      scopeNote: (s.getSelectedButton() === ui.Button.OK ? s.getResponseText().trim() : '') || ('all of ' + name),
+      numbersLine: "Here's " + name + ' in numbers.',
+      agentTagline: 'Data-driven real estate in ' + name,
+      path: slug + '/index.html' };
+  }
+  PropertiesService.getScriptProperties().setProperty('LOCATION', JSON.stringify(L));
+  applyLocation_();
+  try {
+    const sh = SpreadsheetApp.getActive().getSheetByName('▶ Run');
+    if (sh) {
+      sh.getRange('A1').setValue('📊 ' + CONFIG.farmShort + ' MARKET — CONTROL PANEL · ' + VERSION);
+      sh.getRange('A2').setValue('📍 ' + CONFIG.farmName + (CONFIG.scopeNote ? ' — ' + CONFIG.scopeNote : '') + ' · tap a checkbox to run · status on the right');
+    }
+  } catch (e) {}
+  ui.alert('📍 This sheet is now: ' + L.farmName +
+    '\nScope: ' + L.scopeNote +
+    '\nPublishes to: https://' + CONFIG.github.owner + '.github.io/' + CONFIG.github.repo + '/' +
+    L.path.replace(/index\.html$/, '') +
+    '\n\nStored in this sheet — survives future code updates.\nNext: ▶ Build Stats → 🌐 Publish.');
 }
