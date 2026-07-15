@@ -1,0 +1,125 @@
+<!DOCTYPE html><html><head>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Market Comparison | Lance Anderson</title>
+  <style>
+    :root{--terra:#C0652A;--olive:#6B7A3A;--navy:#2F3E46;--camel:#C2A178;--cream:#F4EDE4}
+    *{box-sizing:border-box;margin:0}
+    body{font-family:Georgia,serif;background:var(--cream);color:var(--navy)}
+    .wrap{max-width:960px;margin:0 auto;padding:20px}
+    header{text-align:center;padding:24px 0;border-bottom:3px solid var(--terra)}
+    header img{max-height:70px}
+    h1{font-size:1.5em;margin-top:10px}
+    .updated{color:var(--olive);font-size:.85em;font-style:italic}
+    .card{background:#fff;border-radius:12px;padding:18px;margin:16px 0;border-top:4px solid var(--navy);overflow-x:auto}
+    .kicker{font-size:.72em;letter-spacing:.13em;color:var(--olive);font-weight:bold;margin-bottom:10px}
+    table{width:100%;border-collapse:collapse;font-size:.82em}
+    th{background:var(--olive);color:var(--cream);padding:8px;text-align:left;white-space:nowrap}
+    th.metric{background:var(--navy)}
+    td{padding:7px 8px;border-bottom:1px solid var(--cream);white-space:nowrap}
+    tr:nth-child(even) td{background:rgba(194,161,120,.12)}
+    .metric-label{font-weight:bold;color:var(--navy)}
+    .note{font-size:.72em;color:var(--olive);font-style:italic;margin-bottom:10px}
+    .spark{display:flex;align-items:flex-end;gap:2px;height:32px;min-width:90px}
+    .spark div{flex:1;background:var(--terra);border-radius:1px 1px 0 0;min-height:2px}
+    .loading{padding:30px;text-align:center;color:var(--olive);font-style:italic}
+    footer{text-align:center;font-size:.75em;color:var(--olive);padding:20px 0}
+  </style></head><body><div class="wrap">
+  <header>
+    <img src="https://drive.google.com/uc?id=1NosHz-mLGpPckIeBhrQpgtwH5YU_Lu6s" alt="Lance the Realtor">
+    <h1>Market Comparison</h1>
+    <div class="updated">Live from each market's latest published data · refreshes on every visit</div>
+    <div class="updated">Lance the Realtor · Jason Mitchell Real Estate Utah LLC</div>
+  </header>
+  <div id="content" class="loading">Loading markets…</div>
+  <footer>Utah is a non-disclosure state — this MLS sold data is not publicly available.<br><br>
+  <b>Lance Anderson — Lance the Realtor</b> · Jason Mitchell Real Estate Utah LLC<br>
+  (801) 860-5225 · lancea141@gmail.com · Equal Housing Opportunity</footer>
+  </div>
+  <script>
+  // Add new markets here once they're set up and published — path must
+  // match that location's CONFIG.github.path folder (e.g. 'lehi/').
+  const LOCATIONS = [
+    { path: '', label: 'Traverse Mountain' },
+    { path: 'lehi/', label: 'Lehi' },
+    { path: 'eagle-mountain/', label: 'Eagle Mountain' },
+    { path: 'tooele/', label: 'Tooele' }
+    // { path: 'saratoga-springs/', label: 'Saratoga Springs' },
+  ];
+
+  function fmtMoney(n) { return n == null ? '—' : '$' + Math.round(n).toLocaleString(); }
+  function fmtK(n) { return n == null ? '—' : (n < 0 ? '−$' : '+$') + Math.round(Math.abs(n)).toLocaleString(); }
+  function bathFlag(cm) {
+    if (!cm) return '';
+    const c = Math.max(Math.abs(cm.bathSizeCorr || 0), Math.abs(cm.bathGarCorr || 0));
+    return c > 0.6 ? ' 🟡' : ' 🟢';
+  }
+  function sparkline(trend) {
+    if (!trend || !trend.length) return '<span class="note">no trend data</span>';
+    const vals = trend.map(t => t.n || 0);
+    const max = Math.max.apply(null, vals.concat([1]));
+    return '<div class="spark">' + vals.map(v =>
+      '<div style="height:' + Math.max(Math.round(v / max * 100), 6) + '%" title="' + v + ' sold"></div>'
+    ).join('') + '</div>';
+  }
+
+  const STAT_ROWS = [
+    ['Updated', d => d.updated || '—'],
+    ['Market Index', d => d.index != null ? String(d.index) : '—'],
+    ['Months of Supply', d => d.moi != null ? d.moi.toFixed(1) + ' — ' + (d.moiRating || '') : '—'],
+    ['Median Sold Price (90d)', d => fmtMoney(d.medPrice3)],
+    ['Median $/sqft (90d)', d => d.medPpsf3 ? '$' + Math.round(d.medPpsf3) : '—'],
+    ['Median DOM (90d)', d => d.medDom3 != null ? String(d.medDom3) : '—'],
+    ['Sale-to-List (90d)', d => d.stl3 != null ? d.stl3.toFixed(1) + '%' : '—'],
+    ['Sales — 90d / 12mo', d => (d.sales3 != null ? d.sales3 : '—') + ' / ' + (d.sales12 != null ? d.sales12 : '—')],
+    ['12-mo sold trend', d => sparkline(d.trend)]
+  ];
+  const CMA_ROWS = [
+    ['Main floor sqft', d => d.cm ? '$' + Math.round(d.cm.l1) : '—'],
+    ['Upper floor sqft', d => d.cm ? '$' + Math.round(d.cm.up) : '—'],
+    ['Finished basement sqft', d => d.cm ? '$' + Math.round(d.cm.fin) : '—'],
+    ['Unfinished basement sqft', d => d.cm ? '$' + Math.round(d.cm.unf) : '—'],
+    ['Walkout basement', d => d.cm ? fmtK(d.cm.walk) + ' flat' : '—'],
+    ['Garage (per bay)', d => d.cm ? fmtK(d.cm.gar) : '—'],
+    ['Acre (lot)', d => d.cm ? fmtK(d.cm.acre) : '—'],
+    ['Year built (per yr age)', d => d.cm ? fmtK(d.cm.age) : '—'],
+    ['Full bath', d => d.cm ? fmtK(d.cm.fb) + bathFlag(d.cm) : '—'],
+    ['¾ bath (derived)', d => d.cm ? fmtK(d.cm.tq) : '—'],
+    ['½ bath (derived)', d => d.cm ? fmtK(d.cm.hb) : '—'],
+    ['Model fit', d => d.cm ? 'R² ' + d.cm.r2.toFixed(2) + ' · n=' + d.cm.n : '—']
+  ];
+
+  function buildTable(rows, found) {
+    let html = '<table><tr><th class="metric">Metric</th>' +
+      found.map(d => '<th>' + d.label + '</th>').join('') + '</tr>';
+    rows.forEach(function(row) {
+      html += '<tr><td class="metric-label">' + row[0] + '</td>' +
+        found.map(d => '<td>' + row[1](d) + '</td>').join('') + '</tr>';
+    });
+    return html + '</table>';
+  }
+
+  async function loadAll() {
+    const all = await Promise.all(LOCATIONS.map(async loc => {
+      try {
+        const res = await fetch('../' + loc.path + 'data.json', { cache: 'no-store' });
+        if (!res.ok) return null;
+        const data = await res.json();
+        return Object.assign({ label: loc.label }, data);
+      } catch (e) { return null; }
+    }));
+    const found = all.filter(Boolean);
+    const missing = LOCATIONS.filter((loc, i) => !all[i]).map(l => l.label);
+    const el = document.getElementById('content');
+    if (!found.length) {
+      el.innerHTML = '<div class="loading">No market data found yet — run 🌐 Publish to GitHub on at least one location first.</div>';
+      return;
+    }
+    let html = '';
+    if (missing.length) html += '<div class="note">Not yet published: ' + missing.join(', ') + '</div>';
+    html += '<div class="card"><div class="kicker">MARKET STATS</div>' + buildTable(STAT_ROWS, found) + '</div>';
+    html += '<div class="card"><div class="kicker">CMA ADJUSTMENT RATES (resale single-family) · 🟡 = bath rate correlates with sqft/garage, treat as upper bound</div>' + buildTable(CMA_ROWS, found) + '</div>';
+    el.innerHTML = html;
+  }
+  loadAll();
+  </script>
+  </body></html>
