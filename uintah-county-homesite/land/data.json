@@ -1,0 +1,80 @@
+{
+  "marketName": "Uintah County",
+  "slug": "uintah-county",
+  "version": "vM1.8",
+  "generated": "July 23, 2026",
+  "generatedISO": "2026-07-23T06:20:26.000Z",
+  "band": {
+    "min": 1,
+    "max": 20,
+    "key": "homesite",
+    "note": "Rural residential ground. Wide band for market narrative."
+  },
+  "n": 99,
+  "r2": 0.44620608222672076,
+  "medErrPct": 37.885736116162626,
+  "elasticity": 0.31030074529136986,
+  "monthlyTrend": 0.008643678803443855,
+  "medianPpa": 18541.666666666668,
+  "meanPpa": 37053.7903004323,
+  "medianPrice": 110000,
+  "medianDom": 98,
+  "monthsSupply": 32.996631922738345,
+  "activeCount": 95,
+  "soldCount": 103,
+  "baseCity": "Vernal",
+  "dateRange": {
+    "from": "Jul 2023",
+    "to": "Jun 2026"
+  },
+  "bandTable": [
+    {
+      "from": 1,
+      "to": 2,
+      "n": 21,
+      "medianPrice": 76000,
+      "medianPpa": 75000
+    },
+    {
+      "from": 2,
+      "to": 5,
+      "n": 29,
+      "medianPrice": 88000,
+      "medianPpa": 26666.666666666668
+    },
+    {
+      "from": 5,
+      "to": 10,
+      "n": 23,
+      "medianPrice": 125000,
+      "medianPpa": 15206.812652068125
+    },
+    {
+      "from": 10,
+      "to": 20,
+      "n": 30,
+      "medianPrice": 124000,
+      "medianPpa": 10265.074647887324
+    }
+  ],
+  "cities": [
+    {
+      "city": "Vernal",
+      "premium": 0,
+      "n": 57,
+      "medianPpa": 27382.256297918946
+    },
+    {
+      "city": "Lapoint",
+      "premium": -0.28108841099334003,
+      "n": 8,
+      "medianPpa": 11008.274647887323
+    },
+    {
+      "city": "Randlett",
+      "premium": -0.7775621909514115,
+      "n": 8,
+      "medianPpa": 6167.364778728828
+    }
+  ]
+}
