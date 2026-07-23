@@ -1,0 +1,61 @@
+{
+  "marketName": "Uintah County",
+  "slug": "uintah-county",
+  "version": "vM1.8",
+  "generated": "July 23, 2026",
+  "generatedISO": "2026-07-23T06:20:40.542Z",
+  "band": {
+    "min": 2,
+    "max": 15,
+    "key": "acreage",
+    "note": "Tight band for valuing a specific acreage parcel."
+  },
+  "n": 70,
+  "r2": 0.20214530092582317,
+  "medErrPct": 33.20402945654347,
+  "elasticity": 0.12900214356755424,
+  "monthlyTrend": 0.0094926530723487,
+  "medianPpa": 15605.346190243567,
+  "meanPpa": 28868.907362146,
+  "medianPrice": 117064,
+  "medianDom": 97,
+  "monthsSupply": 46.03318002628121,
+  "activeCount": 95,
+  "soldCount": 72,
+  "baseCity": "Vernal",
+  "dateRange": {
+    "from": "Jul 2023",
+    "to": "Jun 2026"
+  },
+  "bandTable": [
+    {
+      "from": 2,
+      "to": 5,
+      "n": 29,
+      "medianPrice": 88000,
+      "medianPpa": 26666.666666666668
+    },
+    {
+      "from": 5,
+      "to": 10,
+      "n": 23,
+      "medianPrice": 125000,
+      "medianPpa": 15206.812652068125
+    },
+    {
+      "from": 10,
+      "to": 15,
+      "n": 20,
+      "medianPrice": 122500,
+      "medianPpa": 11309.782608695652
+    }
+  ],
+  "cities": [
+    {
+      "city": "Vernal",
+      "premium": 0,
+      "n": 40,
+      "medianPpa": 21362.271362271364
+    }
+  ]
+}
