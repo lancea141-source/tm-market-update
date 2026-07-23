@@ -1,0 +1,85 @@
+{
+  "marketName": "Uintah",
+  "slug": "uintah",
+  "version": "vM1.7",
+  "generated": "July 23, 2026",
+  "generatedISO": "2026-07-23T05:43:32.498Z",
+  "band": {
+    "min": 2,
+    "max": 15,
+    "key": "acreage",
+    "note": "Tight band for valuing a specific acreage parcel."
+  },
+  "n": 210,
+  "r2": 0.6040284149610898,
+  "medErrPct": 30.020960719563426,
+  "elasticity": 0.26030645943489567,
+  "monthlyTrend": 0.007776572083223243,
+  "medianPpa": 15605.346190243567,
+  "meanPpa": 28868.907362145997,
+  "medianPrice": 117064,
+  "medianDom": 97,
+  "monthsSupply": 46.03318002628121,
+  "activeCount": 285,
+  "soldCount": 216,
+  "baseCity": "Vernal",
+  "dateRange": {
+    "from": "Jul 2023",
+    "to": "Jun 2026"
+  },
+  "bandTable": [
+    {
+      "from": 2,
+      "to": 5,
+      "n": 87,
+      "medianPrice": 88000,
+      "medianPpa": 26666.666666666668
+    },
+    {
+      "from": 5,
+      "to": 10,
+      "n": 69,
+      "medianPrice": 125000,
+      "medianPpa": 15206.812652068125
+    },
+    {
+      "from": 10,
+      "to": 15,
+      "n": 60,
+      "medianPrice": 122500,
+      "medianPpa": 11309.782608695652
+    }
+  ],
+  "cities": [
+    {
+      "city": "Vernal",
+      "premium": 0,
+      "n": 120,
+      "medianPpa": 21362.271362271364
+    },
+    {
+      "city": "Lapoint",
+      "premium": -0.3701433798857754,
+      "n": 21,
+      "medianPpa": 11750
+    },
+    {
+      "city": "Ballard",
+      "premium": -0.48640835537775184,
+      "n": 18,
+      "medianPpa": 11904.761904761905
+    },
+    {
+      "city": "Gusher",
+      "premium": -0.6356193539553301,
+      "n": 12,
+      "medianPpa": 8408.619133574008
+    },
+    {
+      "city": "Randlett",
+      "premium": -0.8644466805967894,
+      "n": 18,
+      "medianPpa": 5225.259515570934
+    }
+  ]
+}
