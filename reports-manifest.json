@@ -1,0 +1,11 @@
+{
+  "counties": [
+    {
+      "key": "sanpete",
+      "name": "Sanpete County",
+      "url": "sanpete-county-report/",
+      "version": "vR1.2",
+      "updated": "2026-07-24"
+    }
+  ]
+}
