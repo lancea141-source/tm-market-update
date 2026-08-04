@@ -17,7 +17,13 @@
     h1{font-size:1.5em;margin-top:10px}
     h3{margin:18px 0 8px}
     .updated{color:var(--olive);font-size:.85em;font-style:italic}
-    .index-card{background:var(--navy);color:var(--cream);border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+    .index-card-top{background:var(--navy);color:var(--cream);border-radius:12px 12px 0 0;padding:22px 24px 4px;text-align:center;margin:20px 0 0}
+    .index-card-bottom{background:var(--navy);color:var(--cream);border-radius:0 0 12px 12px;padding:4px 24px 24px;text-align:center;margin:0 0 20px}
+    .glance-grid{background:var(--cream);display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 20px}
+    .glance-grid .stat{padding:10px 6px}
+    .glance-grid .stat b{font-size:1.05em}
+    .glance-grid .stat span{font-size:.68em;line-height:1.3}
+    .glance-wide{grid-column:span 2}
     .index-num{font-size:3.2em;font-weight:bold;color:var(--camel)}
     .report-month{font-size:2.2em;font-weight:bold;color:var(--cream);letter-spacing:.03em;line-height:1.05;margin-bottom:2px}
     .idx-scale{position:relative;display:flex;margin:16px 0 14px;border-radius:6px}
@@ -106,8 +112,17 @@
     <div class="updated">Lance the Realtor · Jason Mitchell Real Estate Utah LLC</div>
   </header>
   
-  <div class="index-card">
+  <div class="index-card-top">
     <div class="report-month">JULY 2026</div>
+  </div>
+  <div class="glance-grid">
+    <div class="stat"><b>24</b><span>Homes sold (July 2026)</span></div>
+    <div class="stat"><b>$669,990</b><span>Median sold (3-mo)</span></div>
+    <div class="stat"><b>$240</b><span>Median $/sqft (3-mo)</span></div>
+    <div class="stat"><b>25</b><span>Median DOM</span></div>
+    <div class="stat glance-wide"><b>2.2 mo</b><span>Inventory supply (69 active)</span></div>
+  </div>
+  <div class="index-card-bottom">
     <div>TM MARKET INDEX</div>
     <div class="index-num">53</div>
     <div>Leaning sellers</div>
@@ -185,13 +200,6 @@
       </table>
       <div class="vt-bottom"><b>BOTTOM LINE:</b> Sellers hold the structural leverage — but buyers have more breathing room than the supply number alone suggests.</div>
     </div>
-  </div>
-  <div class="grid">
-    <div class="stat"><b>24</b><span>Homes sold (July 2026)</span></div>
-    <div class="stat"><b>$669,990</b><span>Median sold (3-mo window)</span></div>
-    <div class="stat"><b>$240</b><span>Median $/sqft (3-mo window)</span></div>
-    <div class="stat"><b>25</b><span>Median days on market</span></div>
-    <div class="stat"><b>2.2 mo</b><span>Inventory supply (69 active)</span></div>
   </div>
   <div class="insight">
     <div class="insight-title">💡 Price per square foot is not one number here</div>
@@ -315,7 +323,7 @@
     <tr><td>New Construction — Town/Condo</td><td>143</td><td>$495,000</td>
     <td>$242</td><td>14</td></tr></table>
   <a class="cta" href="mailto:lancea141@gmail.com?subject=What is my Traverse Mountain home worth?">What's YOUR home worth? Get the real number →</a>
-  <a class="cta" style="background:var(--olive)" href="https://www.youtube.com/@lance141">▶ Watch this week's video update</a>
+  <a class="cta" style="background:var(--olive)" href="https://www.youtube.com/@lance141">▶ Watch the July 2026 video update</a>
   <a class="cta" style="background:var(--navy)" href="history/">📅 Past Reports</a>
   <footer>Utah is a non-disclosure state — sold prices are not public record. This data comes directly from MLS records available only to licensed agents.<br><br>
   <b>Lance Anderson — Lance the Realtor</b><br>
