@@ -17,12 +17,11 @@
     h1{font-size:1.5em;margin-top:10px}
     h3{margin:18px 0 8px}
     .updated{color:var(--olive);font-size:.85em;font-style:italic}
-    .index-card-top{background:var(--navy);color:var(--cream);border-radius:12px 12px 0 0;padding:22px 24px 4px;text-align:center;margin:20px 0 0}
-    .index-card-bottom{background:var(--navy);color:var(--cream);border-radius:0 0 12px 12px;padding:4px 24px 24px;text-align:center;margin:0 0 20px}
-    .glance-grid{background:var(--cream);display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 20px}
-    .glance-grid .stat{padding:10px 6px}
-    .glance-grid .stat b{font-size:1.05em}
-    .glance-grid .stat span{font-size:.68em;line-height:1.3}
+    .index-card{background:var(--navy);color:var(--cream);border-radius:12px;padding:24px;text-align:center;margin:20px 0}
+    .glance-grid{background:var(--cream);border-radius:10px;padding:12px 10px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:14px 0 16px}
+    .glance-grid .stat{padding:9px 5px}
+    .glance-grid .stat b{font-size:1em}
+    .glance-grid .stat span{font-size:.65em;line-height:1.3}
     .glance-wide{grid-column:span 2}
     .index-num{font-size:3.2em;font-weight:bold;color:var(--camel)}
     .report-month{font-size:2.2em;font-weight:bold;color:var(--cream);letter-spacing:.03em;line-height:1.05;margin-bottom:2px}
@@ -112,17 +111,15 @@
     <div class="updated">Lance the Realtor · Jason Mitchell Real Estate Utah LLC</div>
   </header>
   
-  <div class="index-card-top">
+  <div class="index-card">
     <div class="report-month">JULY 2026</div>
-  </div>
-  <div class="glance-grid">
-    <div class="stat"><b>24</b><span>Homes sold (July 2026)</span></div>
-    <div class="stat"><b>$669,990</b><span>Median sold (3-mo)</span></div>
-    <div class="stat"><b>$240</b><span>Median $/sqft (3-mo)</span></div>
-    <div class="stat"><b>25</b><span>Median DOM</span></div>
-    <div class="stat glance-wide"><b>2.2 mo</b><span>Inventory supply (69 active)</span></div>
-  </div>
-  <div class="index-card-bottom">
+    <div class="glance-grid">
+      <div class="stat"><b>24</b><span>Homes sold (July 2026)</span></div>
+      <div class="stat"><b>$669,990</b><span>Median sold (3-mo)</span></div>
+      <div class="stat"><b>$240</b><span>Median $/sqft (3-mo)</span></div>
+      <div class="stat"><b>25</b><span>Median DOM</span></div>
+      <div class="stat glance-wide"><b>2.2 mo</b><span>Inventory supply (69 active)</span></div>
+    </div>
     <div>TM MARKET INDEX</div>
     <div class="index-num">53</div>
     <div>Leaning sellers</div>
