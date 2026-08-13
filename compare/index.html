@@ -1,6 +1,12 @@
 <!DOCTYPE html><html><head>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Market Comparison | Lance Anderson</title>
+  <meta name="description" content="Cross-market comparison of every farm Lance the Realtor tracks.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Market Comparison — Lance the Realtor">
+  <meta property="og:description" content="Live stats and CMA rates side by side across every market.">
+  <meta property="og:image" content="https://lancea141-source.github.io/tm-market-update/assets/logo.svg">
+  <meta name="twitter:card" content="summary_large_image">
   <style>
     :root{--terra:#C0652A;--olive:#6B7A3A;--navy:#2F3E46;--camel:#C2A178;--cream:#F4EDE4}
     *{box-sizing:border-box;margin:0}
@@ -23,6 +29,7 @@
     .spark div{flex:1;background:var(--terra);border-radius:1px 1px 0 0;min-height:2px}
     .loading{padding:30px;text-align:center;color:var(--olive);font-style:italic}
     footer{text-align:center;font-size:.75em;color:var(--olive);padding:20px 0}
+    .stamp{font-size:.9em;opacity:.75;margin-top:8px;display:block}
   </style></head><body><div class="wrap">
   <header>
     <img src="https://drive.google.com/uc?id=1NosHz-mLGpPckIeBhrQpgtwH5YU_Lu6s" alt="Lance the Realtor">
@@ -33,15 +40,15 @@
   <div id="content" class="loading">Loading markets…</div>
   <footer>Utah is a non-disclosure state — this MLS sold data is not publicly available.<br><br>
   <b>Lance Anderson — Lance the Realtor</b> · Jason Mitchell Real Estate Utah LLC<br>
-  (801) 860-5225 · lancea141@gmail.com · Equal Housing Opportunity</footer>
+  (801) 860-5225 · lancea141@gmail.com · Equal Housing Opportunity
+  <span class="stamp">v44.0 · Generated August 12, 2026 at 11:23 PM</span></footer>
   </div>
   <script>
-  // Add new markets here once they're set up and published — path must
-  // match that location's CONFIG.github.path folder (e.g. 'lehi/').
   const LOCATIONS = [
     { path: '', label: 'Traverse Mountain' },
     { path: 'lehi/', label: 'Lehi' },
     { path: 'eagle-mountain/', label: 'Eagle Mountain' },
+    { path: 'west-jordan/', label: 'West Jordan' },
     { path: 'tooele/', label: 'Tooele' }
     // { path: 'saratoga-springs/', label: 'Saratoga Springs' },
   ];
@@ -63,14 +70,14 @@
   }
 
   const STAT_ROWS = [
-    ['Updated', d => d.updated || '—'],
+    ['Report month', d => d.reportMonth || d.updated || '—'],
     ['Market Index', d => d.index != null ? String(d.index) : '—'],
     ['Months of Supply', d => d.moi != null ? d.moi.toFixed(1) + ' — ' + (d.moiRating || '') : '—'],
-    ['Median Sold Price (90d)', d => fmtMoney(d.medPrice3)],
-    ['Median $/sqft (90d)', d => d.medPpsf3 ? '$' + Math.round(d.medPpsf3) : '—'],
-    ['Median DOM (90d)', d => d.medDom3 != null ? String(d.medDom3) : '—'],
-    ['Sale-to-List (90d)', d => d.stl3 != null ? d.stl3.toFixed(1) + '%' : '—'],
-    ['Sales — 90d / 12mo', d => (d.sales3 != null ? d.sales3 : '—') + ' / ' + (d.sales12 != null ? d.sales12 : '—')],
+    ['Median Sold Price (3-mo)', d => fmtMoney(d.medPrice3)],
+    ['Median $/sqft (3-mo)', d => d.medPpsf3 ? '$' + Math.round(d.medPpsf3) : '—'],
+    ['Median DOM (3-mo)', d => d.medDom3 != null ? String(d.medDom3) : '—'],
+    ['Sale-to-List (3-mo)', d => d.stl3 != null ? d.stl3.toFixed(1) + '%' : '—'],
+    ['Sales — 3-mo / 12-mo', d => (d.sales3 != null ? d.sales3 : '—') + ' / ' + (d.sales12 != null ? d.sales12 : '—')],
     ['12-mo sold trend', d => sparkline(d.trend)]
   ];
   const CMA_ROWS = [
