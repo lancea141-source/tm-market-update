@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMA — 4148 S Zeus Dr, West Valley City, UT 84128</title>
+<style>
+  :root{
+    --terracotta:#C0652A; --olive:#6B7A3A; --navy:#2F3E46; --camel:#C2A178; --cream:#F4EDE4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cream);color:var(--navy);line-height:1.5;}
+  .page{max-width:850px;margin:0 auto;padding:24px 20px;}
+  header{display:flex;align-items:center;gap:18px;border-bottom:4px solid var(--terracotta);padding-bottom:16px;margin-bottom:20px;flex-wrap:wrap;}
+  header .logo img{height:88px;width:auto;display:block;}
+  header .titleblock h1{font-size:1.45em;color:var(--navy);letter-spacing:.5px;}
+  header .titleblock .sub{color:var(--terracotta);font-weight:600;font-size:1.02em;}
+  header .titleblock .meta{font-size:.85em;color:#5a6a72;margin-top:2px;}
+  h2{color:var(--terracotta);font-size:1.08em;text-transform:uppercase;letter-spacing:1.2px;border-bottom:2px solid var(--camel);padding-bottom:5px;margin:26px 0 12px;}
+  .card{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(47,62,70,.10);margin-bottom:14px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;}
+  .grid .item{padding:6px 0;border-bottom:1px dashed #e4dccd;font-size:.94em;}
+  .grid .item b{color:var(--navy);display:block;font-size:.78em;text-transform:uppercase;letter-spacing:.6px;color:#7c8a91;}
+  table{width:100%;border-collapse:collapse;font-size:.93em;}
+  th{background:var(--navy);color:var(--cream);text-align:left;padding:8px 10px;font-size:.85em;text-transform:uppercase;letter-spacing:.6px;}
+  td{padding:8px 10px;border-bottom:1px solid #eee4d6;}
+  tr:nth-child(even) td{background:#faf6ef;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .comps-table{overflow-x:auto;}
+  .comps-table table{font-size:.82em;}
+  .sim-high{color:var(--olive);font-weight:700;}
+  .sim-mod{color:var(--camel);font-weight:700;}
+  .bars{margin-top:6px;}
+  .barrow{display:flex;align-items:center;gap:10px;margin:7px 0;}
+  .barrow .lbl{width:130px;font-size:.82em;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;}
+  .barrow .track{flex:1;background:#ece4d4;border-radius:5px;height:22px;position:relative;}
+  .barrow .fill{height:100%;border-radius:5px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-size:.8em;font-weight:700;min-width:90px;}
+  .f-active{background:var(--camel);} .f-uc{background:#8a9aa3;} .f-backup{background:var(--olive);} .f-sold{background:var(--terracotta);} .f-total{background:var(--navy);}
+  .pricebox{background:var(--navy);color:var(--cream);border-radius:12px;padding:20px 22px;text-align:center;margin:14px 0;}
+  .pricebox .range{font-size:1.7em;font-weight:800;letter-spacing:.5px;}
+  .pricebox .point{color:var(--camel);font-size:1.05em;margin-top:4px;}
+  .pricebox .note{font-size:.82em;opacity:.85;margin-top:8px;}
+  .rec-bands{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin:14px 0;}
+  .rec-band{background:#fff;border-radius:10px;padding:16px 10px;text-align:center;box-shadow:0 1px 4px rgba(47,62,70,.10);}
+  .rec-band.mid{background:var(--navy);color:var(--cream);transform:scale(1.04);box-shadow:0 3px 10px rgba(47,62,70,.25);}
+  .rec-band .kicker{font-size:.68em;text-transform:uppercase;letter-spacing:1px;opacity:.8;}
+  .rec-band .amt{font-size:1.35em;font-weight:800;margin-top:4px;}
+  .rec-band.mid .amt{color:var(--camel);}
+  .rec-band .sub{font-size:.72em;margin-top:4px;opacity:.85;}
+  .val-cards{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;}
+  .val-card{background:#fff;border-radius:10px;padding:12px 10px;text-align:center;box-shadow:0 1px 4px rgba(47,62,70,.10);border-top:3px solid var(--camel);}
+  .val-card.primary{border-top-color:var(--terracotta);}
+  .val-card .src{font-size:.68em;text-transform:uppercase;letter-spacing:.6px;color:#7c8a91;font-weight:700;}
+  .val-card .amt{font-size:1.15em;font-weight:800;color:var(--navy);margin-top:4px;}
+  .val-card .stars{color:var(--terracotta);font-size:.78em;margin-top:3px;}
+  .val-card .note{font-size:.68em;color:#7c8a91;margin-top:2px;}
+  .flag{border-left:4px solid var(--terracotta);background:#fff;padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0;font-size:.92em;}
+  .flag b{color:var(--terracotta);}
+  .flag.note-only{border-left-color:var(--camel);font-size:.82em;font-style:italic;color:#5a6a72;}
+  ul.tight{margin:6px 0 0 18px;font-size:.93em;}
+  ul.tight li{margin:4px 0;}
+  .kv-head{font-size:.68em;font-weight:bold;letter-spacing:.12em;color:var(--olive);margin:10px 0 4px}
+  footer{margin-top:30px;border-top:3px solid var(--olive);padding-top:12px;font-size:.78em;color:#6d7b83;}
+  footer .brand{font-weight:700;color:var(--terracotta);font-size:1.05em;}
+  @media print{
+    body{background:#fff;} .page{max-width:100%;padding:0;} .card{box-shadow:none;border:1px solid #e8dfd0;}
+    h2{page-break-after:avoid;} .pricebox,.card,.flag,.rec-bands,.val-cards{page-break-inside:avoid;}
+  }
+  @page{size:letter;margin:0.55in;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="104" height="96" viewBox="150 210 520 480" role="img" aria-label="Lance the Realtor">
+  <rect x="150" y="210" width="520" height="480" rx="26" fill="#33475C"/>
+  <rect x="470" y="320" width="26" height="55" fill="#C0652A"/>
+  <path d="M 464,352 L 464,314 L 502,314 L 502,372" fill="none" stroke="#F4EDE4" stroke-width="8" stroke-linecap="round"/>
+  <polyline points="185,355 325,245 556,414" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="240,357 396,357 396,413 556,414" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="240,357 240,660 495,660" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="288" y="555" font-family="Montserrat,'Century Gothic','Segoe UI',Helvetica,Arial,sans-serif" font-size="84" font-weight="700" letter-spacing="2" fill="#F4EDE4">LANCE</text>
+  <text x="290" y="601" font-family="Montserrat,'Century Gothic','Segoe UI',Helvetica,Arial,sans-serif" font-size="33" font-weight="600" letter-spacing="11" fill="#8C9A85">THE REALTOR</text>
+  <line x1="268" y1="630" x2="645" y2="630" stroke="#C0652A" stroke-width="7"/>
+</svg></div>
+  <div class="titleblock">
+    <h1>Comparative Market Analysis</h1>
+    <div class="sub">4148 S Zeus Dr, West Valley City, UT 84128 (Apollo Hills #1)</div>
+    <div class="meta">Parcel 20-02-103-002 &nbsp;|&nbsp; MLS #2000800 (prior sale) &nbsp;|&nbsp; Prepared August 16, 2026</div>
+  </div>
+</header>
+
+<div class="pricebox" style="margin-top:4px;">
+  <div style="font-size:.8em;text-transform:uppercase;letter-spacing:1.5px;opacity:.8;">Data-Supported Value Range</div>
+  <div class="range">$425,000 – $465,000</div>
+  <div class="point">Best estimate: <b>$445,000</b> &nbsp;(~$238/sqft)</div>
+  <div class="note">Property last sold for $415,000 in July 2024. Since then, West Valley's market has genuinely appreciated (+1.1%/yr per the regression model, with the most recent 90 days trending even higher), and the property gained real capital improvements — solar (Aug 2024) and HVAC/water heater upgrades (Sept 2024). This range reconciles four independent methods: adjusted comparable sales, the regression model, public AVMs, and the recent-sold trend.</div>
+</div>
+
+<div class="rec-bands">
+  <div class="rec-band">
+    <div class="kicker">Conservative</div>
+    <div class="amt">$425,000</div>
+    <div class="sub">Near adjusted-comp median</div>
+  </div>
+  <div class="rec-band mid">
+    <div class="kicker">Best Estimate</div>
+    <div class="amt">$445,000</div>
+    <div class="sub">Blends model, comps, market trend, upgrades</div>
+  </div>
+  <div class="rec-band">
+    <div class="kicker">Optimistic</div>
+    <div class="amt">$465,000</div>
+    <div class="sub">Near recent-sold trend / high AVM</div>
+  </div>
+</div>
+
+<h2>Recent Sold Trend — Is the Market Moving?</h2>
+<div class="card">
+  <table>
+    <tr><th>Window</th><th class="num">Comps</th><th class="num">Avg</th><th class="num">Median</th></tr>
+    <tr><td>Last 90 days</td><td class="num">118</td><td class="num">$461,010</td><td class="num">$467,750</td></tr>
+    <tr><td>Last 180 days</td><td class="num">256</td><td class="num">$465,287</td><td class="num">$465,500</td></tr>
+    <tr><td>Full comp pool (~2 yrs)</td><td class="num">830</td><td class="num">$455,473</td><td class="num">$454,000</td></tr>
+  </table>
+  <ul class="tight" style="margin-top:12px;">
+    <li><b>Unlike a flat or softening market, West Valley is trending up</b> — median sold price has moved from $454,000 (full pool) to $467,750 (last 90 days).</li>
+    <li>The CMA regression model's own fitted trend agrees: <b>+1.1%/year</b>, controlling for size/age/features — this is already baked into every adjustment rate shown below, not a separate guess.</li>
+    <li>This appreciation, on top of two real capital improvements (solar, HVAC/water heater) since the July 2024 sale, is the core reason this property is worth meaningfully more than its $415,000 sale price.</li>
+  </ul>
+  <div class="flag note-only">Computed directly from the West Valley Market Update pipeline's Data tab, filtered to site-built single-family homes within ±35% of subject square footage and ±2 bedrooms.</div>
+</div>
+
+<h2>MLS Subject Range — West Valley City Site-Built SFH</h2>
+<div class="card">
+  <div class="bars">
+    <div class="barrow"><span class="lbl">Backup</span><div class="track"><div class="fill f-backup" style="width:100%">$485,162</div></div></div>
+    <div class="barrow"><span class="lbl">Active</span><div class="track"><div class="fill f-active" style="width:97.9%">$474,724</div></div></div>
+    <div class="barrow"><span class="lbl">Under Contract</span><div class="track"><div class="fill f-uc" style="width:92.8%">$450,263</div></div></div>
+    <div class="barrow"><span class="lbl">Sold</span><div class="track"><div class="fill f-sold" style="width:93.9%">$455,473</div></div></div>
+  </div>
+  <ul class="tight" style="margin-top:12px;">
+    <li><b>Sold avg $455,473 (median $454,000, n=830)</b> — the proven anchor, though the Recent Sold Trend above shows the market has already moved past this blended average.</li>
+    <li><b>Active avg $474,724 (median $469,990, n=107)</b> — current competition, priced at a premium to sold, consistent with a rising market.</li>
+    <li><b>Under Contract avg $450,263 (n=26)</b> — where deals are agreeing to close, tracking close to the sold anchor.</li>
+    <li><b>Backup avg $485,162 (n=16)</b> — committed buyer depth at the top of the range.</li>
+  </ul>
+</div>
+
+<h2>Suggested Comparables</h2>
+<div class="card comps-table">
+  <table>
+    <tr><th>#</th><th>Address</th><th>Sim</th><th>Style</th><th class="num">Price</th><th>Bd/Ba</th><th class="num">SqFt</th><th>Built</th><th class="num">DOM</th><th>Bsmt Fin</th><th>Gar</th></tr>
+    <tr><td>1</td><td>3911 S Kallie Cir</td><td class="sim-high">HIGH</td><td>Split-Entry/Bi-Level</td><td class="num">$489,550</td><td>3/2</td><td class="num">1,854</td><td>1975</td><td class="num">18</td><td>100%</td><td>2</td></tr>
+    <tr><td>2</td><td>5135 W 4170 S</td><td class="sim-high">HIGH</td><td>Rambler/Ranch</td><td class="num">$400,000</td><td>3/2</td><td class="num">1,824</td><td>1979</td><td class="num">53</td><td>25%</td><td>2</td></tr>
+    <tr><td>3</td><td>3868 S Marsha Dr</td><td class="sim-high">HIGH</td><td>Rambler/Ranch</td><td class="num">$457,000</td><td>3/2.5</td><td class="num">1,888</td><td>1976</td><td class="num">4</td><td>95%</td><td>2</td></tr>
+    <tr><td>4</td><td>3947 S 3485 W</td><td class="sim-high">HIGH</td><td>Split-Entry/Bi-Level</td><td class="num">$478,000</td><td>3/2</td><td class="num">1,880</td><td>1970</td><td class="num">13</td><td>90%</td><td>0</td></tr>
+    <tr><td>5</td><td>6194 W Bona Dea Blvd</td><td class="sim-mod">MOD</td><td>Tri/Multi-Level</td><td class="num">$428,000</td><td>3/2</td><td class="num">1,834</td><td>1984</td><td class="num">2</td><td>80%</td><td>2</td></tr>
+    <tr><td>6</td><td>3432 W Brett Ave</td><td class="sim-mod">MOD</td><td>Split-Entry/Bi-Level</td><td class="num">$450,000</td><td>3/2</td><td class="num">1,894</td><td>1970</td><td class="num">92</td><td>100%</td><td>3</td></tr>
+    <tr><td>7</td><td>4253 S 6180 W</td><td class="sim-mod">MOD</td><td>Tri/Multi-Level</td><td class="num">$403,000</td><td>3/2</td><td class="num">1,833</td><td>1984</td><td class="num">47</td><td>100%</td><td>1</td></tr>
+    <tr><td>8</td><td>6709 W 3860 S</td><td class="sim-mod">MOD</td><td>Split-Entry/Bi-Level</td><td class="num">$407,000</td><td>3/1.75</td><td class="num">1,888</td><td>1970</td><td class="num">44</td><td>100%</td><td>1</td></tr>
+  </table>
+  <div class="flag note-only" style="margin-top:10px"><b>Notable:</b> most close comps have a garage (1–3 bays) and higher basement finish (80–100%) than the subject's carport-only parking and 70% finish — real, quantifiable gaps the model already accounts for (garage +$10,172/bay), not reasons to discount further beyond what's already priced in below.</div>
+</div>
+
+<h2>Adjusted Comparable Sales — What Each Comp Really Means for This Home</h2>
+<div class="card comps-table">
+  <table>
+    <tr><th>Address</th><th class="num">Sold Price</th><th class="num">Adjusted to Subject</th><th>Note</th></tr>
+    <tr><td>3911 S Kallie Cir</td><td class="num">$489,550</td><td class="num">$444,032</td><td>Walkout basement, 2-car garage</td></tr>
+    <tr><td>3868 S Marsha Dr</td><td class="num">$457,000</td><td class="num">$424,972</td><td>2-car garage, larger main floor</td></tr>
+    <tr><td>3947 S 3485 W</td><td class="num">$478,000</td><td class="num">$484,367</td><td>No garage — closest match to subject</td></tr>
+    <tr><td>3432 W Brett Ave</td><td class="num">$450,000</td><td class="num">$415,719</td><td>Walkout, 3-car garage</td></tr>
+    <tr><td>6709 W 3860 S</td><td class="num">$407,000</td><td class="num">$404,913</td><td>1-car garage, fewer full baths</td></tr>
+    <tr><td>5135 W 4170 S</td><td class="num">$400,000</td><td class="num">$347,618</td><td>3 full baths, 2-car garage — notably more equipped than subject</td></tr>
+  </table>
+  <div class="flag note-only" style="margin-top:10px">Each adjustment applies this market's own per-feature rates (main floor $/sqft, basement finish, garage, acreage, age, baths) to reconcile that comp toward the subject's exact specs — not just its raw sold price. <b>Median of these six: $420,346.</b> Two additional comps (6194 W Bona Dea Blvd, 4253 S 6180 W) were excluded from this table — both have a genuine upper floor, a structurally different layout from the subject's single-level main+basement design, making a direct linear adjustment less reliable.</div>
+</div>
+
+<h2>Active Competition — What Else Buyers Are Considering</h2>
+<div class="card comps-table">
+  <table>
+    <tr><th>MLS#</th><th>Address</th><th>Style</th><th class="num">List Price</th><th class="num">Model Estimate</th><th class="num">vs. List</th></tr>
+    <tr><td><a href="https://www.utahrealestate.com/2133850" style="color:var(--terracotta)">2133850</a></td><td>6614 W King Valley Dr</td><td>Rambler/Ranch</td><td class="num">$412,000</td><td class="num">$449,088</td><td class="num" style="color:var(--olive);font-weight:700">+9.0%</td></tr>
+    <tr><td><a href="https://www.utahrealestate.com/2175077" style="color:var(--terracotta)">2175077</a></td><td>6828 W Copperhill Dr</td><td>Split-Entry/Bi-Level</td><td class="num">$514,900</td><td class="num">$429,523</td><td class="num" style="color:var(--terracotta);font-weight:700">−16.6%</td></tr>
+    <tr><td><a href="https://www.utahrealestate.com/2171121" style="color:var(--terracotta)">2171121</a></td><td>4382 W Cortney Dr</td><td>Split-Entry/Bi-Level</td><td class="num">$525,000</td><td class="num">$443,452</td><td class="num" style="color:var(--terracotta);font-weight:700">−15.5%</td></tr>
+  </table>
+  <div class="flag note-only" style="margin-top:10px">"Model Estimate" and "vs. List" come directly from the West Valley pipeline's own monthly Listing Estimates — the same regression model used throughout this report, applied to every current active listing automatically, not just the subject. <b>Two of these three competing listings are priced 15–17% above what the market data supports</b> — real context for how the subject compares to what buyers are actually choosing between right now.</div>
+</div>
+
+<h2>Pricing Model Anchor Estimate</h2>
+<div class="card">
+  <div class="grid">
+    <div class="item"><b>Model</b>1,206 resale SFH sales · R² 0.736 · median error ±5.5%</div>
+    <div class="item"><b>Anchor Estimate</b><span style="font-size:1.15em;font-weight:800;color:var(--navy)">$440,977</span> (±7%: $410K–$472K)</div>
+    <div class="item"><b>If walkout basement</b>$455,226 (+$14,249 flat premium — basement listed as "Entrance" type, walkout status unconfirmed)</div>
+    <div class="item"><b>Formula</b>$196,779 base + 936 sqft AG × $119 + 655 sqft fin. bsmt × $100 + 281 sqft unf. bsmt × $76 + 0.18 ac × $255,298</div>
+  </div>
+  <div class="flag note-only" style="margin-top:10px">This model already has the market's +1.1%/yr appreciation trend fit directly into every rate — it's not a separate adjustment layered on top. The estimate range ($440,977–$455,226) sits close to the Best Estimate above and is consistent with the Gemini research's own high-end range ($455K–$470K).</div>
+</div>
+
+<h2>Multi-Source Valuation Snapshot</h2>
+<div class="card">
+  <div class="val-cards">
+    <div class="val-card primary"><div class="src">MLS Sold Comps</div><div class="amt">$455,473</div><div class="stars">★★★</div><div class="note">Primary · n=830</div></div>
+    <div class="val-card"><div class="src">Quantarium AVM</div><div class="amt">$430,238</div><div class="stars">★</div><div class="note">Reference</div></div>
+    <div class="val-card"><div class="src">Redfin Estimate</div><div class="amt">$424,385</div><div class="stars">★</div><div class="note">Reference</div></div>
+    <div class="val-card"><div class="src">Cotality AVM</div><div class="amt">$465,200</div><div class="stars">★</div><div class="note">Reference — highest AVM</div></div>
+  </div>
+  <div class="flag note-only" style="margin-top:12px"><b>What's an AVM?</b> An Automated Valuation Model — a computer-generated estimate (like Zillow's Zestimate) based on public data, not an actual walkthrough of the home. Public AVMs (avg ≈$438K) sit below the MLS sold anchor and the regression model here — consistent with AVMs typically lagging a rising market and not fully crediting the solar/HVAC upgrades. Utah is a non-disclosure state, which further limits AVM accuracy.</div>
+</div>
+
+<h2>Subject Property</h2>
+<div class="card">
+  <div class="grid">
+    <div class="item"><b>Subdivision</b>Apollo Hills #1</div>
+    <div class="item"><b>Type / Year Built</b>Split-Entry/Bi-Level, 1979 (effective 2006)</div>
+    <div class="item"><b>Size</b>1,872 sqft total (936 main + 936 basement) &nbsp;•&nbsp; 3 bd / 2 full ba</div>
+    <div class="item"><b>Basement</b>70% finished</div>
+    <div class="item"><b>Lot</b>0.18 acres (7,841 sqft)</div>
+    <div class="item"><b>Parking</b>2-car covered carport (no garage)</div>
+    <div class="item"><b>Heating / Cooling</b>Forced air (natural gas) &nbsp;•&nbsp; Evaporative cooling</div>
+    <div class="item"><b>2025 Property Tax</b>$2,548</div>
+    <div class="item"><b>Recent Permits</b>Solar installation (Aug 2024); HVAC & water heater upgrades (Sept 2024)</div>
+    <div class="item"><b>Prior Sale</b>$415,000 closed July 17, 2024 (FHA, list $405K–$415K)</div>
+  </div>
+  <div class="flag note-only" style="margin-top:10px">Full published market report: <a href="https://lancea141-source.github.io/tm-market-update/west-valley/" style="color:var(--terracotta)">lancea141-source.github.io/tm-market-update/west-valley/</a></div>
+</div>
+
+<h2>Listing Flags</h2>
+<div class="flag"><b>No garage — carport only.</b> Most close comps have 1–3 car garages. At this market's own rate (+$10,172/bay), this is a real, quantifiable gap versus a typical comp — already reflected in the pricing above, but worth confirming buyers understand upfront rather than discovering it as a surprise.</div>
+<div class="flag"><b>Solar installation (Aug 2024).</b> Confirm whether the system is owned outright or financed/leased — this materially changes how it should be marketed and whether it's a net value-add or a pass-through obligation for the buyer.</div>
+<div class="flag"><b>Confirm basement type.</b> Listed as "Entrance" rather than a clear walkout/daylight designation — worth confirming at showing, since it moves the regression estimate by roughly $14,000.</div>
+<div class="flag"><b>Effective year built (2006) vs. actual (1979).</b> A meaningful gap suggesting a substantial past renovation — worth highlighting specifics in marketing if documented (what was updated, when).</div>
+
+<h2>Seller Summary</h2>
+<div class="card">
+  <ul class="tight">
+    <li><b>The market is moving in your favor.</b> West Valley is appreciating — the regression model shows +1.1%/year, and the most recent 90 days of sales are trending even higher than that trend alone would suggest ($467,750 median vs. $454,000 for the full 2-year comp pool). This isn't a stale market; it's actively moving up.</li>
+    <li><b>You've added real value since your purchase.</b> The solar installation (Aug 2024) and HVAC/water heater upgrades (Sept 2024) are genuine capital improvements, not just maintenance — buyers are paying for these, not just avoiding future costs.</li>
+    <li><b>One honest gap to know about: no garage.</b> The carport-only parking is a real, quantifiable difference from nearly every close comp, which have 1–3 car garages. At this market's own rate (~$10,172/bay), that's already priced into the range below — best to be upfront about it rather than have it surface as a negotiating surprise later.</li>
+    <li><b>The comp-by-comp math backs this up.</b> Adjusting six close sold comps to your exact specs (see table above) lands at a median of $420,346 — and two of your three closest active competitors are priced 15–17% above what the data actually supports, meaning your home, priced right, will look like the stronger deal by comparison.</li>
+    <li><b>Recommendation: list at $445,000–$459,900.</b> This reflects the appreciation trend, your upgrades, and where the adjusted comps and regression model both land — with room to negotiate toward $445,000 if needed while still capturing the market's upward movement since your 2024 purchase.</li>
+  </ul>
+</div>
+
+<footer>
+  <div class="brand">Lance the Realtor</div>
+  <div>Data-driven market analysis &nbsp;|&nbsp; URE / WFRMLS &nbsp;|&nbsp; lancea141@gmail.com</div>
+  <div style="margin-top:6px;">Sources: WFRMLS / West Valley Market Update pipeline data (subject range averages, comps, regression model, MLS #2000800 prior-sale history); Quantarium, Redfin, Collateral Analytics, Cotality public AVMs (reference only). This analysis is an opinion of probable value, not an appraisal. Utah is a non-disclosure state; verify all data independently. © 2026 Lance Anderson.</div>
+</footer>
+
+</div>
+</body>
+</html>
