@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CMA — 694 W Jedediah Way S, Grantsville, UT 84029</title>
+<style>
+  :root{
+    --terracotta:#C0652A; --olive:#6B7A3A; --navy:#2F3E46; --camel:#C2A178; --cream:#F4EDE4;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--cream);color:var(--navy);line-height:1.5;}
+  .page{max-width:850px;margin:0 auto;padding:24px 20px;}
+  header{display:flex;align-items:center;gap:18px;border-bottom:4px solid var(--terracotta);padding-bottom:16px;margin-bottom:20px;flex-wrap:wrap;}
+  header .logo img{height:88px;width:auto;display:block;}
+  header .titleblock h1{font-size:1.45em;color:var(--navy);letter-spacing:.5px;}
+  header .titleblock .sub{color:var(--terracotta);font-weight:600;font-size:1.02em;}
+  header .titleblock .meta{font-size:.85em;color:#5a6a72;margin-top:2px;}
+  h2{color:var(--terracotta);font-size:1.08em;text-transform:uppercase;letter-spacing:1.2px;border-bottom:2px solid var(--camel);padding-bottom:5px;margin:26px 0 12px;}
+  .card{background:#fff;border-radius:10px;padding:16px 18px;box-shadow:0 1px 4px rgba(47,62,70,.10);margin-bottom:14px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 22px;}
+  .grid .item{padding:6px 0;border-bottom:1px dashed #e4dccd;font-size:.94em;}
+  .grid .item b{color:var(--navy);display:block;font-size:.78em;text-transform:uppercase;letter-spacing:.6px;color:#7c8a91;}
+  table{width:100%;border-collapse:collapse;font-size:.93em;}
+  th{background:var(--navy);color:var(--cream);text-align:left;padding:8px 10px;font-size:.85em;text-transform:uppercase;letter-spacing:.6px;}
+  td{padding:8px 10px;border-bottom:1px solid #eee4d6;}
+  tr:nth-child(even) td{background:#faf6ef;}
+  .num{text-align:right;font-variant-numeric:tabular-nums;}
+  .comps-table{overflow-x:auto;}
+  .comps-table table{font-size:.82em;}
+  .sim-high{color:var(--olive);font-weight:700;}
+  .sim-mod{color:var(--camel);font-weight:700;}
+  .bars{margin-top:6px;}
+  .barrow{display:flex;align-items:center;gap:10px;margin:7px 0;}
+  .barrow .lbl{width:130px;font-size:.82em;font-weight:600;color:var(--navy);text-transform:uppercase;letter-spacing:.4px;}
+  .barrow .track{flex:1;background:#ece4d4;border-radius:5px;height:22px;position:relative;}
+  .barrow .fill{height:100%;border-radius:5px;display:flex;align-items:center;justify-content:flex-end;padding-right:8px;color:#fff;font-size:.8em;font-weight:700;min-width:90px;}
+  .f-active{background:var(--camel);} .f-uc{background:#8a9aa3;} .f-backup{background:var(--olive);} .f-sold{background:var(--terracotta);} .f-total{background:var(--navy);}
+  .pricebox{background:var(--navy);color:var(--cream);border-radius:12px;padding:20px 22px;text-align:center;margin:14px 0;}
+  .pricebox .range{font-size:1.7em;font-weight:800;letter-spacing:.5px;}
+  .pricebox .point{color:var(--camel);font-size:1.05em;margin-top:4px;}
+  .pricebox .note{font-size:.82em;opacity:.85;margin-top:8px;}
+  .rec-bands{display:grid;grid-template-columns:1fr 1.2fr 1fr;gap:10px;margin:14px 0;}
+  .rec-band{background:#fff;border-radius:10px;padding:16px 10px;text-align:center;box-shadow:0 1px 4px rgba(47,62,70,.10);}
+  .rec-band.mid{background:var(--navy);color:var(--cream);transform:scale(1.04);box-shadow:0 3px 10px rgba(47,62,70,.25);}
+  .rec-band .kicker{font-size:.68em;text-transform:uppercase;letter-spacing:1px;opacity:.8;}
+  .rec-band .amt{font-size:1.35em;font-weight:800;margin-top:4px;}
+  .rec-band.mid .amt{color:var(--camel);}
+  .rec-band .sub{font-size:.72em;margin-top:4px;opacity:.85;}
+  .val-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .val-card{background:#fff;border-radius:10px;padding:12px 10px;text-align:center;box-shadow:0 1px 4px rgba(47,62,70,.10);border-top:3px solid var(--camel);}
+  .val-card.primary{border-top-color:var(--terracotta);}
+  .val-card .src{font-size:.68em;text-transform:uppercase;letter-spacing:.6px;color:#7c8a91;font-weight:700;}
+  .val-card .amt{font-size:1.15em;font-weight:800;color:var(--navy);margin-top:4px;}
+  .val-card .stars{color:var(--terracotta);font-size:.78em;margin-top:3px;}
+  .val-card .note{font-size:.68em;color:#7c8a91;margin-top:2px;}
+  .flag{border-left:4px solid var(--terracotta);background:#fff;padding:10px 14px;margin:8px 0;border-radius:0 8px 8px 0;font-size:.92em;}
+  .flag b{color:var(--terracotta);}
+  .flag.note-only{border-left-color:var(--camel);font-size:.82em;font-style:italic;color:#5a6a72;}
+  ul.tight{margin:6px 0 0 18px;font-size:.93em;}
+  ul.tight li{margin:4px 0;}
+  footer{margin-top:30px;border-top:3px solid var(--olive);padding-top:12px;font-size:.78em;color:#6d7b83;}
+  footer .brand{font-weight:700;color:var(--terracotta);font-size:1.05em;}
+  @media print{
+    body{background:#fff;} .page{max-width:100%;padding:0;} .card{box-shadow:none;border:1px solid #e8dfd0;}
+    h2{page-break-after:avoid;} .pricebox,.card,.flag,.rec-bands,.val-cards{page-break-inside:avoid;}
+  }
+  @page{size:letter;margin:0.55in;}
+</style>
+</head>
+<body>
+<div class="page">
+
+<header>
+  <div class="logo"><svg xmlns="http://www.w3.org/2000/svg" width="104" height="96" viewBox="150 210 520 480" role="img" aria-label="Lance the Realtor">
+  <rect x="150" y="210" width="520" height="480" rx="26" fill="#33475C"/>
+  <rect x="470" y="320" width="26" height="55" fill="#C0652A"/>
+  <path d="M 464,352 L 464,314 L 502,314 L 502,372" fill="none" stroke="#F4EDE4" stroke-width="8" stroke-linecap="round"/>
+  <polyline points="185,355 325,245 556,414" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="240,357 396,357 396,413 556,414" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="240,357 240,660 495,660" fill="none" stroke="#F4EDE4" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="288" y="555" font-family="Montserrat,'Century Gothic','Segoe UI',Helvetica,Arial,sans-serif" font-size="84" font-weight="700" letter-spacing="2" fill="#F4EDE4">LANCE</text>
+  <text x="290" y="601" font-family="Montserrat,'Century Gothic','Segoe UI',Helvetica,Arial,sans-serif" font-size="33" font-weight="600" letter-spacing="11" fill="#8C9A85">THE REALTOR</text>
+  <line x1="268" y1="630" x2="645" y2="630" stroke="#C0652A" stroke-width="7"/>
+</svg></div>
+  <div class="titleblock">
+    <h1>Comparative Market Analysis</h1>
+    <div class="sub">694 W Jedediah Way S, Grantsville, UT 84029 (Northstar Ranch)</div>
+    <div class="meta">MLS #2144934 &nbsp;|&nbsp; Currently Active — 130+ DOM &nbsp;|&nbsp; Prepared August 13, 2026</div>
+  </div>
+</header>
+
+<div class="pricebox" style="margin-top:4px;">
+  <div style="font-size:.8em;text-transform:uppercase;letter-spacing:1.5px;opacity:.8;">Data-Supported Value Range</div>
+  <div class="range">$480,000 – $525,000</div>
+  <div class="point">Best estimate: <b>$505,000</b> &nbsp;(~$168/sqft)</div>
+  <div class="note">Current list of $539,900 (with $10,000 concessions, net ≈$529,900) sits above where local data actually supports — the closest-matching sold comps (same size/age/style) closed at $484K–$485K, and the most recent 90 days of Grantsville sold data trend meaningfully below the full 2.5-year average.</div>
+</div>
+
+<div class="rec-bands">
+  <div class="rec-band">
+    <div class="kicker">Conservative</div>
+    <div class="amt">$480,000</div>
+    <div class="sub">Near closest comps + recent 90-day trend</div>
+  </div>
+  <div class="rec-band mid">
+    <div class="kicker">Best Estimate</div>
+    <div class="amt">$505,000</div>
+    <div class="sub">Blends regression, comps, recent trend</div>
+  </div>
+  <div class="rec-band">
+    <div class="kicker">Optimistic</div>
+    <div class="amt">$525,000</div>
+    <div class="sub">If walkout confirmed / buyer values lot+finishes</div>
+  </div>
+</div>
+
+<h2>Recent Sold Trend — Is the Market Moving?</h2>
+<div class="card">
+  <table>
+    <tr><th>Window</th><th class="num">Comps</th><th class="num">Avg</th><th class="num">Median</th></tr>
+    <tr><td>Last 90 days</td><td class="num">34</td><td class="num">$513,291</td><td class="num">$470,355</td></tr>
+    <tr><td>Last 180 days</td><td class="num">81</td><td class="num">$529,998</td><td class="num">$485,000</td></tr>
+    <tr><td>Full comp pool (2.5 yrs)</td><td class="num">238</td><td class="num">$530,988</td><td class="num">$520,000</td></tr>
+  </table>
+  <ul class="tight" style="margin-top:12px;">
+    <li><b>Unlike a flat market, this shows real softening</b> — median sold price has trended down from $520,000 (full pool) toward $470,355 (last 90 days).</li>
+    <li>The CMA regression model's own fitted trend confirms the direction: <b>-1.5%/year</b>, controlling for size/age/features — a more apples-to-apples read than the raw comp averages, which also mix in some older/smaller homes among the recent sales.</li>
+    <li>Either way, both signals point the same direction: caution against anchoring to the higher end of the full 2.5-year average.</li>
+  </ul>
+  <div class="flag note-only">Computed directly from the Grantsville Market Update pipeline's Data tab, filtered to site-built single-family homes within ±35% of subject square footage and ±2 bedrooms.</div>
+</div>
+
+<h2>MLS Subject Range — Grantsville Site-Built SFH</h2>
+<div class="card">
+  <div class="bars">
+    <div class="barrow"><span class="lbl">Active</span><div class="track"><div class="fill f-active" style="width:100%">$648,156</div></div></div>
+    <div class="barrow"><span class="lbl">Under Contract</span><div class="track"><div class="fill f-uc" style="width:90.7%">$588,060</div></div></div>
+    <div class="barrow"><span class="lbl">Sold</span><div class="track"><div class="fill f-sold" style="width:81.9%">$530,988</div></div></div>
+  </div>
+  <ul class="tight" style="margin-top:12px;">
+    <li><b>Active avg $648,156 (median $611,995, n=60)</b> — current competition, unproven asking prices, subject excluded from this count.</li>
+    <li><b>Under Contract avg $588,060 (median $608,950, n=10)</b> — where deals are actually agreeing to close right now, well below active asking.</li>
+    <li><b>Sold avg $530,988 (median $520,000, n=238)</b> — the proven anchor, though the Recent Sold Trend above shows this average is already higher than the most current data supports.</li>
+    <li>Backup data too thin to report (n=1) — not used.</li>
+  </ul>
+</div>
+
+<h2>Suggested Comparables</h2>
+<div class="card comps-table">
+  <table>
+    <tr><th>#</th><th>Address</th><th>Sim</th><th>Style</th><th class="num">Price</th><th>Bd/Ba</th><th class="num">SqFt</th><th>Built</th><th class="num">DOM</th><th>Bsmt Fin</th><th>Gar</th></tr>
+    <tr><td>1</td><td>417 W Domain Ln</td><td class="sim-high">HIGH</td><td>2-Story</td><td class="num">$484,000</td><td>3/2.5</td><td class="num">2,931</td><td>2023</td><td class="num">84</td><td>15%</td><td>2</td></tr>
+    <tr><td>2</td><td>424 E Stafford St #122</td><td class="sim-high">HIGH</td><td>Rambler/Ranch</td><td class="num">$575,000</td><td>3/2</td><td class="num">3,059</td><td>2024</td><td class="num">152</td><td>0%</td><td>3</td></tr>
+    <tr><td>3</td><td>597 E Otto Ln #423</td><td class="sim-high">HIGH</td><td>Rambler/Ranch</td><td class="num">$654,100</td><td>3/2</td><td class="num">3,042</td><td>2024</td><td class="num">—</td><td>0%</td><td>3</td></tr>
+    <tr><td>4</td><td>88 N Maraschino</td><td class="sim-high">HIGH</td><td>Rambler/Ranch</td><td class="num">$485,000</td><td>3/2</td><td class="num">3,076</td><td>2023</td><td class="num">126</td><td>0%</td><td>3</td></tr>
+    <tr><td>5</td><td>178 S Liberty St #206</td><td class="sim-mod">MOD</td><td>2-Story</td><td class="num">$620,650</td><td>4/2.5</td><td class="num">3,030</td><td>2025</td><td class="num">105</td><td>10%</td><td>3</td></tr>
+    <tr><td>6</td><td>409 E Stafford St #133</td><td class="sim-mod">MOD</td><td>Rambler/Ranch</td><td class="num">$617,540</td><td>3/1.75</td><td class="num">2,921</td><td>2026</td><td class="num">50</td><td>0%</td><td>3</td></tr>
+    <tr><td>7</td><td>653 Gold Dust Rd</td><td class="sim-mod">MOD</td><td>Rambler/Ranch</td><td class="num">$610,000</td><td>3/2</td><td class="num">3,066</td><td>2017</td><td class="num">63</td><td>55%</td><td>4</td></tr>
+    <tr><td>8</td><td>445 S Hinckley Rd #309</td><td class="sim-mod">MOD</td><td>Rambler/Ranch</td><td class="num">$639,800</td><td>4/3</td><td class="num">2,968</td><td>2018</td><td class="num">52</td><td>80%</td><td>3</td></tr>
+  </table>
+  <div class="flag note-only" style="margin-top:10px"><b>Notable:</b> the two closest matches by size/age (#1 and #4, both ~2,930-3,076 sqft, built 2023, minimal basement finish — nearly identical to subject) sold at $484,000 and $485,000. The higher comps (#2, #3, #5-8) mostly have significantly more finished basement or larger garage capacity than the subject's ~30% finish / 2-car garage.</div>
+</div>
+
+<h2>Pricing Model Anchor Estimate</h2>
+<div class="card">
+  <div class="grid">
+    <div class="item"><b>Model</b>1,366 resale SFH sales (county-wide fallback — Grantsville-only sample too thin for a reliable fit) · R² 0.784 · median error ±7.8%</div>
+    <div class="item"><b>Anchor Estimate</b><span style="font-size:1.15em;font-weight:800;color:var(--navy)">$498,943</span> (±9%: $454K–$544K)</div>
+    <div class="item"><b>If walkout basement</b>$516,234 (+$17,291 flat premium — unconfirmed, verify at showing)</div>
+    <div class="item"><b>Formula</b>$112,523 base + 1,499 sqft AG × $149 + 450 sqft fin. bsmt × $133 + 1,049 sqft unf. bsmt × $92 + 0.37 ac × $18,171</div>
+  </div>
+  <div class="flag note-only" style="margin-top:10px"><b>Fallback note:</b> Grantsville doesn't yet have enough of its own resale sales for a standalone model, so this fit uses the full Tooele County pool. The pipeline flags this automatically and will narrow to Grantsville-only data as more local sales accumulate.</div>
+  <div class="flag note-only" style="margin-top:10px">This regression estimate ($498,943–$516,234) sits close to the Conservative–Best Estimate range above, reinforcing that current list price likely has room to come down further, even accounting for the property's 2023 build quality and larger-than-typical 0.37-acre lot.</div>
+</div>
+
+<h2>Gemini Research Estimate (Reference)</h2>
+<div class="card">
+  <div class="val-cards">
+    <div class="val-card"><div class="src">Gemini Fair Market Est.</div><div class="amt">$525K–$540K</div><div class="stars">★</div><div class="note">Reference — AI research synthesis</div></div>
+    <div class="val-card"><div class="src">ZIP 84029 Median Sold</div><div class="amt">$555K–$590K</div><div class="stars">★</div><div class="note">Reference — broader ZIP, not Grantsville-specific</div></div>
+    <div class="val-card"><div class="src">Current List (net of concession)</div><div class="amt">$529,900</div><div class="stars">✦</div><div class="note">Context — $539,900 less $10K concessions</div></div>
+  </div>
+  <div class="flag note-only" style="margin-top:12px">Gemini's own estimate already sits above what our Grantsville-specific MLS data and regression model support — the gap is worth noting explicitly rather than treated as a second confirming opinion.</div>
+</div>
+
+<h2>Subject Property</h2>
+<div class="card">
+  <div class="grid">
+    <div class="item"><b>Subdivision</b>Northstar Ranch</div>
+    <div class="item"><b>Type / Year Built</b>Rambler/Ranch, 2023</div>
+    <div class="item"><b>Size</b>2,998 sqft total (1,499 main + 1,499 full basement) &nbsp;•&nbsp; 3 bd / 3 full ba</div>
+    <div class="item"><b>Basement</b>~30% finished (includes 3rd full bath)</div>
+    <div class="item"><b>Lot</b>0.37 acres — larger than typical subdivision lot (0.20–0.25 ac norm)</div>
+    <div class="item"><b>Exterior / Parking</b>2-car garage + dedicated RV parking, fully fenced yard</div>
+    <div class="item"><b>HOA</b>$18/month</div>
+    <div class="item"><b>2025 Property Tax</b>$3,459/year</div>
+    <div class="item"><b>Key Upgrades</b>Quartz counters, oversized island, gas fireplace, vaulted great room</div>
+    <div class="item"><b>List History</b>$580,000 (3/20/26) → $550,000 (4/22/26) → $539,900 (7/22/26)</div>
+  </div>
+</div>
+
+<h2>The Pricing Conversation</h2>
+<div class="card">
+  <div class="kv-head">IF YOU REPRESENT THE BUYER</div>
+  <ul class="tight">
+    <li><b>Lead with what's genuinely good about the home</b> — 2023 build, 0.37-acre lot (well above the 0.20–0.25 ac subdivision norm), quality finishes, RV parking. This isn't a weak property; it's a mispriced one.</li>
+    <li><b>Then bring the data, not an opinion:</b> "Two homes nearly identical to this one — same size, same age, similar basement finish — sold for $484,000 and $485,000. That's real, recent, and close to your specs."</li>
+    <li><b>Name the leverage plainly:</b> 130+ days on market with two price drops already tells you the seller has tested higher prices and the market hasn't supported them.</li>
+    <li><b>Use the trend as backup, not the headline:</b> the last 90 days of Grantsville sales are running below the 2.5-year average — waiting isn't likely to make this home more expensive.</li>
+    <li><b>Suggested opening:</b> $480,000–$490,000, with room to move to $505,000 if needed to win it — still well inside the data-supported range, and below the seller's net-of-concession ask of $529,900.</li>
+  </ul>
+  <div class="kv-head" style="margin-top:16px">IF YOU REPRESENT THE SELLER</div>
+  <ul class="tight">
+    <li><b>Open with the data, not a verdict:</b> "I want to walk you through what's actually happening in the market right now, so we can make a confident call together — not just my opinion."</li>
+    <li><b>Show the gap honestly:</b> at $539,900, the price sits above where the closest comparable sales have closed — two homes nearly identical to yours sold at $484,000 and $485,000.</li>
+    <li><b>Explain it's not personal:</b> the broader Grantsville market has softened over the last 90 days compared to the full 2.5-year average — this is a market shift, not a reflection of the home.</li>
+    <li><b>Offer a constructive path, not just a cut:</b> the ~1,049 sqft of unfinished basement represents roughly $96,500 of value at this market's own rates ($92–$133/sqft) — finishing more of it before the next round of showings is a real option alongside a price move.</li>
+    <li><b>Recommendation:</b> given 130+ days already invested, a move to $505,000–$515,000 would align the listing with where buyers are actually transacting, rather than continuing to test a price point the last two reductions already showed wasn't working.</li>
+  </ul>
+  <div class="flag note-only" style="margin-top:12px">Both scripts lead with the data before the number — the goal is a client who understands *why*, not just what to do next.</div>
+</div>
+
+<h2>Listing Flags</h2>
+<div class="flag"><b>130+ days on market with two price drops.</b> Puts real pressure on the seller — buyer offers below list, or requests for additional concessions beyond the existing $10,000, are reasonably likely to be considered.</div>
+<div class="flag"><b>Unfinished basement is the main value gap.</b> ~1,049 sqft unfinished at this pricing model's rate (~$92/sqft) represents roughly $96,500 of embedded, unrealized value — a real negotiating point for a buyer, or a pre-list finishing decision for a seller.</div>
+<div class="flag"><b>Confirm walkout/daylight basement status.</b> Not specified in available records. Adds a $17,291 flat premium to the regression estimate if confirmed — worth checking before finalizing a number either direction.</div>
+<div class="flag"><b>Two closest-matching comps sold well below current list.</b> Both nearly identical in size/age/finish level to the subject — $484,000 and $485,000 — a strong, specific data point for offer or price-reduction conversations.</div>
+
+<footer>
+  <div class="brand">Lance the Realtor</div>
+  <div>Data-driven market analysis &nbsp;|&nbsp; URE / WFRMLS &nbsp;|&nbsp; lancea141@gmail.com</div>
+  <div style="margin-top:6px;">Sources: WFRMLS / Grantsville Market Update pipeline data (subject range averages, comps, regression model); Gemini AI research synthesis (reference only). This analysis is an opinion of probable value, not an appraisal. Utah is a non-disclosure state; verify all data independently. © 2026 Lance Anderson.</div>
+</footer>
+
+</div>
+</body>
+</html>
