@@ -1,0 +1,86 @@
+{
+  "marketName": "Duchesne",
+  "slug": "duchesne",
+  "version": "vM1.8",
+  "generated": "August 25, 2026",
+  "generatedISO": "2026-08-25T22:42:20.665Z",
+  "band": {
+    "min": 0.05,
+    "max": 2,
+    "key": "lots",
+    "note": "Serviced building lots. Price follows size, location and utilities predictably."
+  },
+  "n": 132,
+  "r2": 0.4680132598239708,
+  "medErrPct": 61.84083042470989,
+  "elasticity": 0.6320649836892963,
+  "monthlyTrend": 0.012387700816080427,
+  "medianPpa": 60209.424083769634,
+  "meanPpa": 94682.30249387016,
+  "medianPrice": 33000,
+  "medianDom": 77,
+  "monthsSupply": 121.25319869977177,
+  "activeCount": 336,
+  "soldCount": 133,
+  "baseCity": "Roosevelt",
+  "dateRange": {
+    "from": "Aug 2022",
+    "to": "Aug 2026"
+  },
+  "bandTable": [
+    {
+      "from": 0,
+      "to": 0.25,
+      "n": 37,
+      "medianPrice": 19999,
+      "medianPpa": 94736.84210526316
+    },
+    {
+      "from": 0.25,
+      "to": 0.5,
+      "n": 27,
+      "medianPrice": 45000,
+      "medianPpa": 131250
+    },
+    {
+      "from": 0.5,
+      "to": 1,
+      "n": 28,
+      "medianPrice": 17000,
+      "medianPpa": 22390.10989010989
+    },
+    {
+      "from": 1,
+      "to": 2,
+      "n": 41,
+      "medianPrice": 55000,
+      "medianPpa": 49166.66666666667
+    }
+  ],
+  "cities": [
+    {
+      "city": "Tabiona",
+      "premium": 1.8668021085761453,
+      "n": 12,
+      "medianPpa": 129261.36363636363
+    },
+    {
+      "city": "Duchesne",
+      "premium": 0.20001948121599655,
+      "n": 27,
+      "medianPpa": 40625
+    },
+    {
+      "city": "Roosevelt",
+      "premium": 0,
+      "n": 55,
+      "medianPpa": 122641.50943396226
+    },
+    {
+      "city": "Fruitland",
+      "premium": -0.6098731863724204,
+      "n": 26,
+      "medianPpa": 17105.263157894737
+    }
+  ]
+}
