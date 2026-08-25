@@ -1,0 +1,86 @@
+{
+  "marketName": "Duchesne",
+  "slug": "duchesne",
+  "version": "vM1.8",
+  "generated": "August 25, 2026",
+  "generatedISO": "2026-08-25T22:28:02.223Z",
+  "band": {
+    "min": 1,
+    "max": 20,
+    "key": "homesite",
+    "note": "Rural residential ground. Wide band for market narrative."
+  },
+  "n": 508,
+  "r2": 0.3493418384787137,
+  "medErrPct": 39.289237429907516,
+  "elasticity": 0.5057307093625416,
+  "monthlyTrend": 0.006194947081827662,
+  "medianPpa": 7000,
+  "meanPpa": 13780.51417441696,
+  "medianPrice": 45000,
+  "medianDom": 74,
+  "monthsSupply": 29.89992924289902,
+  "activeCount": 336,
+  "soldCount": 546,
+  "baseCity": "Fruitland",
+  "dateRange": {
+    "from": "Aug 2022",
+    "to": "Aug 2026"
+  },
+  "bandTable": [
+    {
+      "from": 1,
+      "to": 2,
+      "n": 41,
+      "medianPrice": 55000,
+      "medianPpa": 49166.66666666667
+    },
+    {
+      "from": 2,
+      "to": 5,
+      "n": 84,
+      "medianPrice": 20500,
+      "medianPpa": 5957.396467768772
+    },
+    {
+      "from": 5,
+      "to": 10,
+      "n": 251,
+      "medianPrice": 55000,
+      "medianPpa": 9771.98697068404
+    },
+    {
+      "from": 10,
+      "to": 20,
+      "n": 170,
+      "medianPrice": 40000,
+      "medianPpa": 3632.2979797979797
+    }
+  ],
+  "cities": [
+    {
+      "city": "Tabiona",
+      "premium": 0.8941583884826696,
+      "n": 9,
+      "medianPpa": 14992.503748125937
+    },
+    {
+      "city": "Fruitland",
+      "premium": 0,
+      "n": 204,
+      "medianPpa": 8780.379746835442
+    },
+    {
+      "city": "Roosevelt",
+      "premium": -0.3550854835662254,
+      "n": 60,
+      "medianPpa": 7189.5424836601305
+    },
+    {
+      "city": "Duchesne",
+      "premium": -0.3819789719094904,
+      "n": 203,
+      "medianPpa": 5511.022044088176
+    }
+  ]
+}
