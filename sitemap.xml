@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://lancea141-source.github.io/tm-market-update/</loc><lastmod>2026-11-17</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/</loc><changefreq>monthly</changefreq><priority>1.0</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/alpine-to-lehi/land/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://lancea141-source.github.io/tm-market-update/cma-rates/</loc><lastmod>2026-11-17</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/cma-rates/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/compare/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/draper/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/draper/cma-rates/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
@@ -45,7 +45,7 @@
   <url><loc>https://lancea141-source.github.io/tm-market-update/herriman/history/2026-07/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/herriman/history/2026-08/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/herriman/history/2026-08/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://lancea141-source.github.io/tm-market-update/history/</loc><lastmod>2026-11-17</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/history/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/history/2026-01/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/history/2026-01/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/history/2026-02/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
@@ -90,6 +90,11 @@
   <url><loc>https://lancea141-source.github.io/tm-market-update/lehi/history/2026-09/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/lehi/history/2026-10/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/lehi/history/2026-10/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/mapleton/</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/mapleton/cma-rates/</loc><lastmod>2026-11-18</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/mapleton/history/</loc><lastmod>2026-11-18</lastmod><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/mapleton/history/2026-10/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://lancea141-source.github.io/tm-market-update/mapleton/history/2026-10/cma-rates/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/murray/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/murray/cma-rates/</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://lancea141-source.github.io/tm-market-update/murray/history/</loc><changefreq>yearly</changefreq><priority>0.5</priority></url>
